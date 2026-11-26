@@ -113,7 +113,14 @@ foundation.
   - **PE user loader.** `kernel/loader/loader.v` maps sections with `U/S=1`,
     zero-fills tails and applies DIR64 deltas. `test-pe-user` builds a 0x400-byte
     PE32+, loads it at `0x140000000`, jumps to `0x140001000` in CPL3 and receives
-    `pe-exec-ok` from its `SYSCALL` marker. Imports/TEB/W^X are next.
+    `pe-exec-ok` from its `SYSCALL` marker.
+  - **IAT imports, TEB/PEB, user process.** `test-exe` resolves an
+    `IMAGE_IMPORT_DESCRIPTOR` to a built-in ntdll stub (`mov r10,rcx; mov
+    eax,0x5a; syscall; ret`), creates a new PML4 (`DTB 0x12c000`), maps TEB
+    `0x170000000` / PEB `0x170001000`, sets `KERNEL_GS_BASE=TEB` and enters CPL3
+    as PID `0x100`. The PE calls the IAT, reads the time from its buffer, checks
+    `GS:[0x30]` and sends a marker (`exe-ok`). Still an in-memory image; reading
+    `.exe` from disk needs VFS/block I/O.
   - **NTFS parser.** `kernel/fs/ntfs.v` (module `fs`) reads the VBR, FILE
     record, USA fixup, attributes and resident FILE_NAME; 32 host tests. NTFS
     is a compatibility backend, not the root.
