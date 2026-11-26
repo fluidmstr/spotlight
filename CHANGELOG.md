@@ -53,6 +53,11 @@ foundation.
     faults at `0x100000000` and observes `PF cr2/err`.
   - VAD table: insert/find/remove over 64 ranges with host tests and a boot
     smoke test (`vad-ok`).
+  - **ABI oracle**: a licensed Windows 10 22H2 image + public PDB symbols were
+    used to verify real layouts. `KPCR.Prcb = 0x180`, `KPRCB.CurrentThread = 0x008`
+    (`GS:[0x188]`), `EPROCESS.UniqueProcessId = 0x440`, `ETHREAD.Cid = 0x478`,
+    `KTHREAD.Teb = 0x0f0`. Our `KPRCB.Number` was wrong (0x020) and is now 0x024.
+    Details: `spotlight-nt/docs/05-abi/verified-19045.md`.
 - `Loader_block` ABI specification and offset tests (`sizeof == 0x70`).
 - Tooling: `ssdt-gen`, `symgen`, `pdb-abi`, version stamping, QEMU harness with
   serial expectations.
