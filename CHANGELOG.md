@@ -119,8 +119,13 @@ foundation.
     eax,0x5a; syscall; ret`), creates a new PML4 (`DTB 0x12c000`), maps TEB
     `0x170000000` / PEB `0x170001000`, sets `KERNEL_GS_BASE=TEB` and enters CPL3
     as PID `0x100`. The PE calls the IAT, reads the time from its buffer, checks
-    `GS:[0x30]` and sends a marker (`exe-ok`). Still an in-memory image; reading
-    `.exe` from disk needs VFS/block I/O.
+    `GS:[0x30]` and sends a marker (`exe-ok`).
+  - **FAT32 read + file-backed .exe.** `kernel/fs/fat32.v` parses the BPB, root
+    directory and FAT chains (8.3, read-only, partial reads); host tests cover
+    parse/find/read and malformed images. `test-exe-file` builds a 64 KiB FAT32
+    RAM disk with `SPOT.EXE`, reads it through the filesystem parser and runs the
+    bytes through the PE loader (`file-fat32=0x800`, `exe-file-ok`). The disk is
+    a RAM buffer; AHCI/NVMe and VFS are next.
   - **NTFS parser.** `kernel/fs/ntfs.v` (module `fs`) reads the VBR, FILE
     record, USA fixup, attributes and resident FILE_NAME; 32 host tests. NTFS
     is a compatibility backend, not the root.
