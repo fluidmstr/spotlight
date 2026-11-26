@@ -59,10 +59,18 @@ foundation.
     `test-demand` touches three pages above 4 GiB (`demand-ok`, PTE `A/D` set).
   - ISR stubs now save/restore all 15 GPRs and drop the error code only for
     `err=1` vectors (`docs/07-subsystems/exceptions.md` §5.1).
-  - **Syscall table (19045).** 472 `Nt*` ordinals extracted from a local
-    `ntdll.dll` stub scan (`tools/ntdll-ssn`), generated into
-    `compat/ssdt/ntdll_19045.{csv,v,md}`. The only hole is `0x005a`, which this
-    build does not export; `validate --allow-gaps` records it explicitly.
+  - **Syscall table (19045).** `tools/ntdll-ssn` extracts 472 exported stubs;
+    `tools/kernel-ssdt` reads `KiServiceTable` (`0xc79f0`), `KiServiceLimit`
+    (`0x1d9` = 473) and resolves names through `llvm-symbolizer` (OMAP-aware).
+    All 472 ntdll names match the kernel; `0x005a` is `NtQuerySystemTime` —
+    implemented in user mode, hence no ntdll stub. 15 slots share stubs
+    (12 return `STATUS_NOT_IMPLEMENTED`, 3 return success). Artifacts:
+    `compat/ssdt/ntoskrnl_19045.*` and `verify_19045.md`.
+  - **M6 (started) — syscall entry.** `EFER.SCE`, `STAR/LSTAR/FMASK` with
+    readback, `spot_syscall_entry` (ring 0, `IRETQ`) and an SSN limit check:
+    valid numbers return `STATUS_NOT_IMPLEMENTED`, out-of-range numbers return
+    `STATUS_INVALID_SYSTEM_SERVICE`. `test-syscall` drives `SYSCALL` from ring 0
+    and observes `syscall-ok`; ring 3, `SWAPGS` and the kernel stack are pending.
   - VAD table: insert/find/remove over 64 ranges with host tests and a boot
     smoke test (`vad-ok`).
   - **ABI oracle**: a licensed Windows 10 22H2 image + public PDB symbols were
