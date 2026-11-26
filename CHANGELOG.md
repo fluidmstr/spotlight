@@ -84,10 +84,32 @@ foundation.
     address `0x7FFE0000` needs 2 MiB identity-page splitting.
   - **M5 (started) — EPROCESS/KTHREAD skeleton.** Verified packed layouts
     (`KTHREAD 0x430`, `ETHREAD 0x898`, `KPROCESS 0x438`, `EPROCESS 0xa40`) in
-    `kernel/include/ps.v`, host ABI asserts, and one static System process
+    `kernel/include/ps.v`, host ABI asserts, and a static System process
     (`PID 4`) / thread (`TID 4`) with `DirectoryTableBase = CR3`. The syscall
-    stack now lives after the ETHREAD in `ps.Spot_thread`; `ps-ready` and the
+    stack lives after the ETHREAD in `ps.Spot_thread`; `ps-ready` and the
     per-thread stack address are in the boot log.
+  - **SSN handler table.** `ke_syscall_dispatch` now indexes
+    `syscall_slots[0x1d9]` filled by `syscall_register`; duplicates are
+    rejected. `NtQuerySystemTime` is the first registered handler.
+  - **CR3 + cooperative threads.** `ps_switch_process` loads
+    `EPROCESS.Pcb.DirectoryTableBase` through `mm.switch_cr3` (with readback);
+    `spot_swap_context` saves/restores the nonvolatile registers, and a second
+    static thread starts from a synthetic frame. `test-threads` proves
+    `0x100000 → 0x12b000 → 0x100000` and A→B→A (`thread-b-running`,
+    `thread-a-resumed`). A 32-priority ready-queue module (`kernel/ps/sched`)
+    now backs the choice: `sched-tid=0x1` comes from `pop_highest`, and B puts
+    A back before switching. No preemption yet.
+  - **RTC time source.** `kernel/hal/rtc.v` reads the CMOS RTC (BCD/12h/UIP,
+    bounded retries) and fills `KUSER_SHARED_DATA` with the real boot time;
+    the fixed 2026-01-01 value remains as a fallback.
+  - **PE32+ parser.** `kernel/image/pe.v` validates DOS/COFF/optional headers,
+    walks sections, maps RVA→file offset and iterates DIR64 relocations; host
+    tests cover truncated/malformed images. Not yet wired into the loader.
+  - **ABI helpers.** NTSTATUS u32 codes (`status.v`) with i32 aliases in
+    `ntstatus.v`, and `LIST_ENTRY` operations (`list.v`) with host tests.
+  - **Licence policy.** ADR-0009 and `docs/11-legal.md`: kernel-facing layers
+    (PE/DLL, registry, GDI, Win32 ABI) stay original; Wine (LGPL-2.1+) may be
+    reused only in isolated userland with notices.
   - VAD table: insert/find/remove over 64 ranges with host tests and a boot
     smoke test (`vad-ok`).
   - **ABI oracle**: a licensed Windows 10 22H2 image + public PDB symbols were
