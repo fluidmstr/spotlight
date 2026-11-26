@@ -4,6 +4,42 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ---
 
+## [Unreleased] — kernel I/O and syscall progress (2026-11-26)
+
+### Added
+
+- **24 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+  `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27.
+  Memory: `NtAllocateVirtualMemory` 0x18, `NtFreeVirtualMemory` 0x1e,
+  `NtProtectVirtualMemory` 0x50, `NtCreateSection` 0x4a,
+  `NtMapViewOfSection` 0x28, `NtUnmapViewOfSection` 0x2a. Events:
+  `NtCreateEvent` 0x48, `NtSetEvent` 0x0e, `NtResetEvent` 0x7a,
+  `NtQueryEvent` 0x56. Timing and waits: `NtWaitForSingleObject` 0x04,
+  `NtDelayExecution` 0x34, `NtQueryPerformanceCounter` 0x31,
+  `NtQuerySystemTime` 0x5a. Queries: `NtQueryInformationProcess` 0x19,
+  `NtQuerySystemInformation` 0x36, `NtQueryVirtualMemory` 0x23,
+  `NtYieldExecution` 0x46. Objects: `NtClose` 0x0f.
+  `NtWaitForSingleObject` covers signaled and zero-timeout waits; blocking waits
+  return `STATUS_NOT_IMPLEMENTED`.
+- **Storage**: polling AHCI (`READ DMA`, SPOTFAT port selection), FAT32 read and
+  in-place write, and a published VFS volume over a 64 KiB disk image.
+- **Memory**: anonymous NT sections with demand paging; user VA allocator above
+  8 GiB.
+- **Ring 3**: PE loader with IAT/TEB/PEB at CPL3; multi-argument `SYSCALL` entry
+  including arguments passed on the stack.
+- **Scheduling**: preemptive round-robin.
+
+### Verified
+
+| Check | Result |
+|---|---|
+| `test-boot`, `test-exe`, `test-exe-file`, `test-disk` | green |
+| `test-preempt`, `test-svc`, `test-svc3`, `test-sync` | green |
+| `test-file`, `test-section`, `test-event` | green |
+| host unit tests | green |
+
+---
+
 ## [26.4173.0.1] — 2026-11-26
 
 First bootable milestone. The kernel is not usable as an OS yet; it is a proven

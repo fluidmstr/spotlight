@@ -9,20 +9,20 @@
 
 <br>
 
-![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-51%25%20·%20M4-2ea043?style=flat-square)
+![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-57%25%20·%20M4-2ea043?style=flat-square)
 ![Spotlight X](https://img.shields.io/badge/Spotlight%20X-5%25-lightgrey?style=flat-square)
 ![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-5%25-lightgrey?style=flat-square)
-![Spotlight](https://img.shields.io/badge/Spotlight%20project-31%25-orange?style=flat-square)
+![Spotlight](https://img.shields.io/badge/Spotlight%20project-33%25-orange?style=flat-square)
 ![ABI](https://img.shields.io/badge/ABI-Windows%2010%20x64%2019045-0078d4?style=flat-square)
 ![Language](https://img.shields.io/badge/language-V-4f7396?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--2.0--or--later-blue?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Spotlight NT     ██████████░░░░░░░░░░  51%   kernel: M0–M2 closed, M3 75%, M4 40%, M5 25%, M6 75%, M10 10%
+Spotlight NT     ███████████░░░░░░░░░  57%   kernel: M0–M2 closed, M3 75%, M4 55%, M5 35%, M6 85%, M10 20%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro — skeleton + specs
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   5%   installer environment — docs + build skeleton
-Spotlight        ██████░░░░░░░░░░░░░░  31%   the project as a product (target: L3)
+Spotlight        ███████░░░░░░░░░░░░░  33%   the project as a product (target: L3)
 ```
 
 </div>
@@ -53,13 +53,13 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 
 | Scale | What it measures | Progress | Works today | Next |
 |---|---|---|---|---|
-| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **51%** (M0–M2 ✅, M3 75%, M4 40%, M5 25%, M6 75%, M10 10%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, demand-paged sections, SSDT, ring-3 SYSCALL, `NtQuerySystemTime`, preemptive scheduler, RTC, PE32+ loader with IAT/TEB/PEB/process CR3, FAT32 read from a RAM disk, NTFS parser | M4: working sets/COW; M5: priorities/idle; M6: block I/O; M10: VFS/ext4 |
+| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **57%** (M0–M2 ✅, M3 75%, M4 55%, M5 35%, M6 85%, M10 20%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous NT sections with demand paging, 24 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, PE32+ loader with IAT/TEB/PEB/process CR3, polling AHCI + FAT32 read/write behind a VFS volume, event objects and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle; M6: blocking waits and broader dispatch; M10: ext4, write-back cache |
 | **Spotlight X** | userland, Win32 layer, GUI, distro | **5%** (skeleton + specs) | repository layout, architecture and app-compatibility plans | ntdll and PE loader behind syscalls (needs L1) |
 | **Spotlight PE** | installer / recovery environment | **5%** (docs + build script) | repo, subsystem docs, `mk/build.vsh` skeleton | console/explorer on the kernel, installer flow |
-| **Spotlight** | the project as a product | **31%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
+| **Spotlight** | the project as a product | **33%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
 
-> The kernel is ahead of the OS. That is expected: userland and the installer are
-> blocked on syscalls, which are blocked on the memory manager and process objects.
+> The kernel is ahead of the OS. That is expected: userland and the installer need
+> a broad, stable syscall surface, not a handful of handlers.
 
 ---
 
@@ -130,6 +130,30 @@ And the machine itself proves the rest:
 | Bugcheck path | `v run mk/build.vsh -- test-bugcheck` | `BUGCHECK 0x50000001` |
 | Host unit tests | `v run mk/build.vsh -- test` | 5/5 suites |
 
+### Recent kernel progress (2026-11-26)
+
+* **24 NT syscalls** dispatched: file I/O (`NtCreateFile`, `NtReadFile`,
+  `NtWriteFile`, `NtQueryInformationFile`, `NtSetInformationFile`), memory
+  (`NtAllocateVirtualMemory`, `NtFreeVirtualMemory`, `NtProtectVirtualMemory`,
+  `NtCreateSection`, `NtMapViewOfSection`, `NtUnmapViewOfSection`), events
+  (`NtCreateEvent`, `NtSetEvent`, `NtResetEvent`, `NtQueryEvent`) and
+  timing/synchronization (`NtDelayExecution`, `NtQueryPerformanceCounter`,
+  `NtWaitForSingleObject`). Signaled and zero-timeout waits work; blocking
+  waits still return `STATUS_NOT_IMPLEMENTED`.
+* **Storage**: polling AHCI (`READ DMA`, SPOTFAT port selection), FAT32 read and
+  in-place write, and a published VFS volume over a 64 KiB disk image.
+* **Memory**: anonymous NT sections with demand paging and a user VA allocator
+  above 8 GiB.
+* **Ring 3**: the PE loader (IAT/TEB/PEB) runs at CPL3, and a multi-argument
+  `SYSCALL` entry — including arguments passed on the stack — is proven by
+  `test-svc3`.
+* **Scheduling**: preemptive round-robin with the LAPIC timer.
+
+Boot suites `test-boot`, `test-disk`, `test-file`, `test-section`, `test-event`,
+`test-sync`, `test-svc`, `test-svc3`, `test-preempt` and the host unit tests are
+green. There is still no userland, installer or GUI, and no real Windows `.exe`
+yet.
+
 What this means: our own UEFI loader reads a PE32+ kernel, allocates pages, applies
 relocations, exits boot services, builds its own page tables, switches CR3, installs
 a kernel stack and enters `KiSystemStartup`. The kernel brings up COM1, GDT, TSS,
@@ -146,13 +170,13 @@ M0  ████████████████████ 100%   Bare-met
 M1  ████████████████████ 100%   Loader: PE32+, ExitBootServices, own CR3, handoff
 M2  ████████████████████ 100%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
 M3  ███████████████░░░░░  75%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI
-M4  ████████░░░░░░░░░░░░  40%   Memory manager: PFN, paging, sections, demand
-M5  █████░░░░░░░░░░░░░░░  25%   Processes/threads: preemptive round-robin, queues, CR3
-M6  ███████████████░░░░░  75%   System calls + PE loader, IAT/TEB/PEB, file-backed exe
+M4  ███████████░░░░░░░░░  55%   Memory manager: PFN, paging, VAD, NT sections, demand
+M5  ███████░░░░░░░░░░░░░  35%   Processes/threads: preemptive round-robin, queues, CR3
+M6  █████████████████░░░  85%   Syscalls: 24 NT handlers, multi-arg entry, events
 M7  ░░░░░░░░░░░░░░░░░░░░   0%   I/O manager, PnP, power  ← gate G2
 M8  ░░░░░░░░░░░░░░░░░░░░   0%   Registry, hives, transactions
 M9  ░░░░░░░░░░░░░░░░░░░░   0%   Security: tokens, ACL, integrity
-M10 ██░░░░░░░░░░░░░░░░░░  10%   Storage: FAT32 read + RAM disk, NTFS parser; ext4/block I/O next
+M10 ████░░░░░░░░░░░░░░░░  20%   Storage: AHCI, FAT32 read/write, VFS volume, NTFS parser
 M11 ░░░░░░░░░░░░░░░░░░░░   0%   ntdll, ALPC, console
 M12 ░░░░░░░░░░░░░░░░░░░░   0%   Win32 layer, application corpus  → L3
 M13 ░░░░░░░░░░░░░░░░░░░░   0%   Track A research: real MS drivers/userland
@@ -165,10 +189,10 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | **M1** | loader, PE32+, ExitBootServices, CR3 | ✅ closed | `EXIT / PGON / JUMP` on debugcon |
 | **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | ✅ closed | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI | 🟡 75% | `lapic_bus_hz≈998MHz`, `ioapic_irq-ok`, `pci devices=6` |
-| **M4** | Mm: PFN page database, kernel pool, page tables, VAD, sections | 🟡 40% | `paging-on`, `cr3=0x100000`, `vad-ok`, `demand-ok` |
-| **M5** | Ob/Ps: objects, processes, threads, scheduler | 🟡 25% | `preempt-ok`, `sched-tid=0x1`, `cr3-b`/`cr3-a`, `thread-a-resumed` |
-| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 75% | `test-exe-file`: FAT32 read + IAT/TEB/PEB + CPL3, `exe-file-ok` |
-| **M10** | Storage: VFS, FAT32/ext4/NTFS/btrfs, Cc | 🟡 10% | FAT32 read + 64 KiB RAM disk, 6 host tests; NTFS parser |
+| **M4** | Mm: PFN page database, kernel pool, page tables, VAD, sections | 🟡 55% | `paging-on`, `vad-ok`, `demand-ok`, anonymous NT sections (`test-section`) |
+| **M5** | Ob/Ps: objects, processes, threads, scheduler | 🟡 35% | `preempt-ok`, `sched-tid=0x1`, `cr3-b`/`cr3-a`, `thread-a-resumed` |
+| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 85% | 24 NT handlers; `test-svc3` multi-argument SYSCALL incl. stack args; `test-exe-file` |
+| **M10** | Storage: VFS, FAT32/ext4/NTFS/btrfs, Cc | 🟡 20% | `test-disk`/`test-file`: AHCI + FAT32 read/write, VFS volume, 64 KiB image; NTFS parser |
 | M7–M9, M11–M12 | Io, Cm, Se, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | distributable OS image | ⬜ | — |
@@ -208,7 +232,7 @@ choices:
 * Details: ADR-0010 (namespace/filesystems), ADR-0011 (graphics), ADR-0012
   (session fallback) in `spotlight-nt/docs/adr/`.
 
-That is why the overall project sits at 31% while the kernel is at 51%: the OS
+That is why the overall project sits at 33% while the kernel is at 57%: the OS
 needs the kernel to finish first, not the other way around.
 
 ---
@@ -259,7 +283,7 @@ Detailed design lives in [`spotlight-nt/docs`](https://github.com/fluidmstr/spot
 
 ## Try it now
 
-You will get a serial log and a halted kernel — not a desktop. That is the honest state.
+You will get a serial log and the kernel's self-tests — not a desktop. That is the honest state.
 
 ```bash
 git clone --recursive https://github.com/fluidmstr/spotlight-x.git

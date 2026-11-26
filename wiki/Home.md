@@ -5,21 +5,31 @@
 ---
 
 ```
-Spotlight NT     ██████░░░░░░░░░░░░░░  30%   kernel: M0–M2 closed, M3 75%, M4 30%
+Spotlight NT     ███████████░░░░░░░░░  57%   kernel: M0–M2 closed, M3 75%, M4 55%, M5 35%, M6 85%, M10 20%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   5%   installer environment
-Spotlight        ███░░░░░░░░░░░░░░░░░  18%   the project as a product (target: L3)
+Spotlight        ███████░░░░░░░░░░░░░  33%   the project as a product (target: L3)
 ```
 
-**Current state:** M0 and M1 are closed, M2 is closed, M3 is at 75% and M4 has
-started. Our own UEFI loader boots a PE32+ kernel written in V, exits boot
-services, builds identity page tables and enters `KiSystemStartup`. The kernel
-brings up COM1, GDT/TSS/IDT, exception handling, KPCR, hardware interrupts
-(PIC/PIT), a bugcheck path, the first M3 pieces — ACPI/MADT, LAPIC/IOAPIC, IRQL,
-spinlocks, a calibrated LAPIC timer replacing the 8259/PIT, one IOAPIC line
-routed end-to-end, PCI bus enumeration — and the first M4 pieces: a PFN page
-database, kernel pool, own page tables with CR3 switch, a page-fault handler and
-a VAD table.
+**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 55%, M5 at 35%, M6 at
+85% and M10 at 20%. Our own UEFI loader boots a PE32+ kernel written in V, exits
+boot services, builds identity page tables and enters `KiSystemStartup`. The
+kernel brings up COM1, GDT/TSS/IDT, exception handling, KPCR, hardware
+interrupts, a bugcheck path, ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, a
+calibrated LAPIC timer replacing the 8259/PIT, one IOAPIC line routed end-to-end
+and PCI bus enumeration. It maps anonymous NT sections with demand paging, runs
+a preemptive round-robin scheduler, and loads a PE32+ image with IAT/TEB/PEB into
+CPL3. Storage is a polling AHCI driver over FAT32 with in-place writes, exposed
+as a published VFS volume; the kernel also has event objects, timed delays and
+an NTFS parser.
+
+**Recent kernel progress:** 24 NT syscalls (file, memory, event and timing
+objects), a CPL3 PE image making a multi-argument `SYSCALL` including stack
+arguments (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume, anonymous
+NT sections with demand paging, event objects, `NtDelayExecution` and a user VA
+allocator above 8 GiB. `NtWaitForSingleObject` handles signaled and zero-timeout
+waits; blocking waits still return `STATUS_NOT_IMPLEMENTED`. There is no
+userland, installer or GUI yet, and no real Windows `.exe`.
 
 ---
 
@@ -47,7 +57,7 @@ a VAD table.
 UEFI firmware
   └─ SPOTLDR.EFI      reads ntoskrnl.exe from the ESP, PE32+, relocations
        └─ ntoskrnl.exe   KiSystemStartup: COM1, GDT/TSS/IDT, KPCR, bugcheck
-            └─ (halts)
+            └─ (self-tests, then halts)
 ```
 
 Proof, straight from QEMU:
@@ -84,8 +94,9 @@ I [mm] vad-ok
 I [serial] loopback self-test passed
 ```
 
-Self-tests: `test-boot` (31/31 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`);
-`test-bugcheck` (`BUGCHECK 0x50000001`).
+Self-tests: `test-boot` (33/33 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`),
+`test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file` (AHCI + FAT32 + VFS),
+`test-section` (NT sections), `test-event`/`test-sync` (events + waits), `test-svc`/`test-svc3` (multi-argument SYSCALL); host unit tests.
 
 ---
 

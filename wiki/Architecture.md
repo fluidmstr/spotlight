@@ -38,17 +38,17 @@ Everything after step 9 uses only port `0xE9` until the kernel's COM1 driver run
 
 | Component | Responsibility | State |
 |---|---|---|
-| **Ke** | GDT/IDT/TSS, IRQL, DPC/APC, scheduler, threads | 🟡 descriptors + KPCR done |
-| **HAL** | CPU, PIC/PIT → APIC/HPET, PCI, ACPI, SMP | 🟡 COM1, PIC/PIT code |
-| **Mm** | PFN database, paging, sections, pools, MDL | ⬜ |
-| **Ob** | object manager, handles, namespaces | ⬜ |
-| **Ps** | processes, threads, ETHREAD/EPROCESS | ⬜ |
+| **Ke** | GDT/IDT/TSS, IRQL, DPC/APC, scheduler, threads | 🟡 descriptors, KPCR, preemptive round-robin |
+| **HAL** | CPU, PIC/PIT → APIC/HPET, PCI, ACPI, SMP | 🟡 COM1, ACPI/APIC, PCI, HPET |
+| **Mm** | PFN database, paging, sections, pools, MDL | 🟡 PFN, pool, paging, VAD, sections |
+| **Ob** | object manager, handles, namespaces | 🟡 event objects |
+| **Ps** | processes, threads, ETHREAD/EPROCESS | 🟡 processes, threads, CR3, scheduler |
 | **Io** | IRPs, device stacks, PnP, power | ⬜ |
 | **Cm** | registry, hives | ⬜ |
 | **Se** | tokens, SIDs, ACL, integrity | ⬜ |
 | **Lpc** | ALPC ports | ⬜ |
 | **Cc** | file cache | ⬜ |
-| **Syscall** | LSTAR/KiSystemCall64, SSDT | ⬜ |
+| **Syscall** | LSTAR/KiSystemCall64, SSDT | 🟡 24 handlers, multi-arg entry |
 
 ---
 

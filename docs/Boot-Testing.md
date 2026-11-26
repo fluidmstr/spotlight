@@ -78,7 +78,7 @@ v run tools/vm/qemu.vsh -- run-efi --expect tests/boot/m2_serial.lines
 Output on success:
 
 ```
-boot test passed: 31 expectations matched
+boot test passed: 33 expectations matched
 ```
 
 On failure it prints every missing line and exits 1.

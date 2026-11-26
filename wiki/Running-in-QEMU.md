@@ -79,7 +79,7 @@ worked and the kernel died before or inside serial setup.
 
 * x86-64, UEFI (no legacy BIOS), Secure Boot **off**.
 * 2 GiB RAM is enough for now.
-* AHCI/NVMe are not used yet; the ESP is a FAT drive.
+* AHCI is polled for disk I/O; NVMe is not used yet; the ESP is a FAT drive.
 
 ---
 

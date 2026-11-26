@@ -12,19 +12,19 @@ M0  ████████████████████ 100%   ✅
 M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
-M4  ██████░░░░░░░░░░░░░  30%
-M5  ░░░░░░░░░░░░░░░░░░░░   0%
-M6  ░░░░░░░░░░░░░░░░░░░░   0%
+M4  ███████████░░░░░░░░░  55%
+M5  ███████░░░░░░░░░░░░░  35%
+M6  █████████████████░░░  85%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
 M9  ░░░░░░░░░░░░░░░░░░░░   0%
-M10 ░░░░░░░░░░░░░░░░░░░░   0%
+M10 ████░░░░░░░░░░░░░░░░  20%
 M11 ░░░░░░░░░░░░░░░░░░░░   0%
 M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  kernel 30% · project 18%
+Overall  ███████████████████████░░░░░░░░░░░░░░░░░  kernel 57% · project 33%
 ```
 
 | Stage | Scope | State |
@@ -33,13 +33,13 @@ Overall  ██████░░░░░░░░░░░░░░░░░�
 | **M1** | loader, PE32+, `ExitBootServices`, own CR3, handoff | ✅ |
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
-| **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 30% |
-| **M5** | Ob/Ps: objects, processes, threads, APC | ⬜ |
-| **M6** | syscalls, first ring-3 process | ⬜ |
+| **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 55% |
+| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 35% |
+| **M6** | syscalls, ring-3 process, dispatch | 🟡 85% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
-| **M10** | storage, NTFS, Cc | ⬜ |
+| **M10** | storage, NTFS, Cc | 🟡 20% |
 | **M11** | ntdll, ALPC, console | ⬜ |
 | **M12** | Win32 layer, `.exe` corpus → **L3** | ⬜ |
 | **M13** | Track A: real MS drivers and userland | 🔬 |
@@ -55,7 +55,7 @@ Overall  ██████░░░░░░░░░░░░░░░░░�
 * `bugcheck(code, subsys, msg)` and `assert_failed`.
 * 8259 remap, PIT 100 Hz, 16 IRQ stubs with `iretq`, `sti`; `pit_ticks=0x3`.
 
-### M3, in detail — 40%
+### M3, in detail — 75%
 
 Done:
 
@@ -82,6 +82,34 @@ Remaining:
 * Adopt IRQL/spinlocks in klog and the scheduler paths.
 * ECAM/MCFG, BAR discovery and device-to-GSI wiring for real drivers.
 * HPET as a stable time source (currently calibration only); TSC deadline timer.
+
+### M4–M6 and M10, in detail
+
+Done:
+
+* **M4 (55%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
+  page-fault handling, anonymous NT sections with demand paging, and a user VA
+  allocator above 8 GiB.
+* **M5 (35%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
+  ready queues, and preemptive round-robin driven by the LAPIC timer.
+* **M6 (85%)**: SYSCALL entry with stack arguments, 24 NT handlers covering
+  file, memory, event, time and process/system queries; PE32+ loader with
+  IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers signaled and zero-timeout
+  waits; blocking waits return `STATUS_NOT_IMPLEMENTED`.
+* **M10 (20%)**: polling AHCI (`READ DMA`, SPOTFAT port selection), FAT32 read
+  and in-place write, a published VFS volume over a 64 KiB disk image, and the
+  NTFS parser.
+
+Remaining:
+
+* M4: working sets, copy-on-write, section sharing.
+* M5: priorities and quantum, idle thread, APC delivery.
+* M6: blocking waits, remaining syscall semantics.
+* M10: block I/O abstraction, ext4 backend, cache manager.
+
+Boot tests `test-disk`, `test-file`, `test-section`, `test-event`, `test-sync`,
+`test-svc`, `test-svc3`, `test-preempt` and the host unit suites are green
+(2026-11-26).
 
 ---
 

@@ -15,8 +15,9 @@
 | Microsoft drivers | ❌ |
 | Windows userland | ❌ |
 
-There is no compatibility layer hiding in the repository. The kernel prints a few
-lines on COM1 and halts. Everything above L0 is ahead of us.
+There is no compatibility layer hiding in the repository. The kernel prints its
+boot log on COM1, exercises 24 NT syscalls, runs a CPL3 PE32+ test image and then
+halts. The compatibility layers, userland and application corpus are still ahead.
 
 ---
 
