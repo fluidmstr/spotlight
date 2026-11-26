@@ -105,6 +105,9 @@ foundation.
   - **PE32+ parser.** `kernel/image/pe.v` validates DOS/COFF/optional headers,
     walks sections, maps RVA→file offset and iterates DIR64 relocations; host
     tests cover truncated/malformed images. Not yet wired into the loader.
+  - **NTFS parser.** `kernel/fs/ntfs.v` (module `fs`) reads the VBR, FILE
+    record, USA fixup, attributes and resident FILE_NAME; 32 host tests. NTFS
+    is a compatibility backend, not the root.
   - **ABI helpers.** NTSTATUS u32 codes (`status.v`) with i32 aliases in
     `ntstatus.v`, and `LIST_ENTRY` operations (`list.v`) with host tests.
   - **Licence policy.** ADR-0009 and `docs/11-legal.md`: kernel-facing layers

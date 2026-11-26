@@ -9,20 +9,20 @@
 
 <br>
 
-![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-41%25%20·%20M4-2ea043?style=flat-square)
+![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-42%25%20·%20M4-2ea043?style=flat-square)
 ![Spotlight X](https://img.shields.io/badge/Spotlight%20X-5%25-lightgrey?style=flat-square)
 ![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-5%25-lightgrey?style=flat-square)
-![Spotlight](https://img.shields.io/badge/Spotlight%20project-25%25-orange?style=flat-square)
+![Spotlight](https://img.shields.io/badge/Spotlight%20project-26%25-orange?style=flat-square)
 ![ABI](https://img.shields.io/badge/ABI-Windows%2010%20x64%2019045-0078d4?style=flat-square)
 ![Language](https://img.shields.io/badge/language-V-4f7396?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--2.0--or--later-blue?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Spotlight NT     ████████░░░░░░░░░░░░  41%   kernel: M0–M2 closed, M3 75%, M4 40%, M5 15%, M6 40%
+Spotlight NT     ████████░░░░░░░░░░░░  42%   kernel: M0–M2 closed, M3 75%, M4 40%, M5 15%, M6 40%, M10 5%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro — skeleton + specs
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   5%   installer environment — docs + build skeleton
-Spotlight        █████░░░░░░░░░░░░░░░  25%   the project as a product (target: L3)
+Spotlight        █████░░░░░░░░░░░░░░░  26%   the project as a product (target: L3)
 ```
 
 </div>
@@ -53,10 +53,10 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 
 | Scale | What it measures | Progress | Works today | Next |
 |---|---|---|---|---|
-| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **41%** (M0–M2 ✅, M3 75%, M4 40%, M5 15%, M6 40%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, demand-paged sections, SSDT, ring-3 SYSCALL, `NtQuerySystemTime`, user `KUSER_SHARED_DATA`, CR3 + cooperative threads, ready queues, RTC time, PE32+ parser | M4: working sets/COW; M5: preemption; M6: more handlers |
+| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **42%** (M0–M2 ✅, M3 75%, M4 40%, M5 15%, M6 40%, M10 5%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, demand-paged sections, SSDT, ring-3 SYSCALL, `NtQuerySystemTime`, user `KUSER_SHARED_DATA`, CR3 + cooperative threads, ready queues, RTC time, PE32+ parser, NTFS parser | M4: working sets/COW; M5: preemption; M6: more handlers; M10: VFS/ext4 |
 | **Spotlight X** | userland, Win32 layer, GUI, distro | **5%** (skeleton + specs) | repository layout, architecture and app-compatibility plans | ntdll and PE loader behind syscalls (needs L1) |
 | **Spotlight PE** | installer / recovery environment | **5%** (docs + build script) | repo, subsystem docs, `mk/build.vsh` skeleton | console/explorer on the kernel, installer flow |
-| **Spotlight** | the project as a product | **25%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
+| **Spotlight** | the project as a product | **26%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
 
 > The kernel is ahead of the OS. That is expected: userland and the installer are
 > blocked on syscalls, which are blocked on the memory manager and process objects.
@@ -119,6 +119,7 @@ And the machine itself proves the rest:
 | PS skeleton | boot log | `ps-ready`, `dtb=0x100000`, `syscall-stack=0x...` |
 | Threads + CR3 | `v run mk/build.vsh -- test-threads` | `cr3-b`, `cr3-a`, `sched-tid=0x1`, `thread-b-running`, `thread-a-resumed` |
 | PE32+ parser | `v -path "kernel;@vlib" test tests/unit/image` | host suite: headers, sections, RVA, DIR64 |
+| NTFS parser | `v -path "kernel;@vlib" test tests/unit/fs` | VBR, FILE, USA, attributes, FILE_NAME |
 | LAPIC timer | `v run mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `pit_timer-ok` |
 | Exception routing | `v run mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
@@ -147,7 +148,7 @@ M6  ████████░░░░░░░░░░░░  40%   System c
 M7  ░░░░░░░░░░░░░░░░░░░░   0%   I/O manager, PnP, power  ← gate G2
 M8  ░░░░░░░░░░░░░░░░░░░░   0%   Registry, hives, transactions
 M9  ░░░░░░░░░░░░░░░░░░░░   0%   Security: tokens, ACL, integrity
-M10 ░░░░░░░░░░░░░░░░░░░░   0%   Storage, NTFS, cache manager
+M10 █░░░░░░░░░░░░░░░░░░░   5%   Storage: VFS design, NTFS parser; ext4/FAT32 next
 M11 ░░░░░░░░░░░░░░░░░░░░   0%   ntdll, ALPC, console
 M12 ░░░░░░░░░░░░░░░░░░░░   0%   Win32 layer, application corpus  → L3
 M13 ░░░░░░░░░░░░░░░░░░░░   0%   Track A research: real MS drivers/userland
@@ -163,7 +164,8 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | **M4** | Mm: PFN page database, kernel pool, page tables, VAD, sections | 🟡 40% | `paging-on`, `cr3=0x100000`, `vad-ok`, `demand-ok` |
 | **M5** | Ob/Ps: objects, processes, threads, scheduler | 🟡 15% | `ps-ready`, `cr3-b`/`cr3-a`, `sched-tid=0x1`, `thread-a-resumed` |
 | **M6** | Syscall entry + dispatch, ring 3 | 🟡 40% | `kshared-time=<RTC>`, `kshared-user-ok`, two matching `syscall-arg1`, `syscall-user-ok`, SSDT 473 slots |
-| M7–M12 | Io, Cm, Se, NTFS, ntdll, Win32 | ⬜ | — |
+| **M10** | Storage: VFS, FAT32/ext4/NTFS/btrfs, Cc | 🟡 5% | VFS design, NTFS VBR/MFT/USA parser + 32 host tests |
+| M7–M9, M11–M12 | Io, Cm, Se, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | distributable OS image | ⬜ | — |
 
@@ -202,7 +204,7 @@ choices:
 * Details: ADR-0010 (namespace/filesystems), ADR-0011 (graphics), ADR-0012
   (session fallback) in `spotlight-nt/docs/adr/`.
 
-That is why the overall project sits at 25% while the kernel is at 41%: the OS
+That is why the overall project sits at 26% while the kernel is at 42%: the OS
 needs the kernel to finish first, not the other way around.
 
 ---
