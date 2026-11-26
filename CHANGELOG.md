@@ -8,7 +8,7 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ### Added
 
-- **25 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+- **28 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
   `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27,
   `NtFlushBuffersFile` 0x4b.
   Memory: `NtAllocateVirtualMemory` 0x18, `NtFreeVirtualMemory` 0x1e,
@@ -19,7 +19,9 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   `NtDelayExecution` 0x34, `NtQueryPerformanceCounter` 0x31,
   `NtQuerySystemTime` 0x5a. Queries: `NtQueryInformationProcess` 0x19,
   `NtQuerySystemInformation` 0x36, `NtQueryVirtualMemory` 0x23,
-  `NtYieldExecution` 0x46. Objects: `NtClose` 0x0f.
+  `NtQueryVolumeInformationFile` 0x49, `NtYieldExecution` 0x46.
+  Objects: `NtClose` 0x0f. Threads: `NtSetInformationThread` 0x0d,
+  `NtQueryInformationThread` 0x25.
   `NtWaitForSingleObject` covers signaled and zero-timeout waits; blocking waits
   return `STATUS_NOT_IMPLEMENTED`.
 - **Storage**: polling AHCI (`READ DMA`/`WRITE DMA`, SPOTFAT port selection),
