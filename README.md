@@ -2,22 +2,27 @@
 
 # Spotlight
 
-### An NT kernel written from scratch in V.
+### An open-source operating system that runs Windows applications — kernel, userland and installer, built from scratch.
 
-**Spotlight NT** is an open-source implementation of the Windows NT kernel for x86-64.
-**Spotlight X** is the operating system built on it. **Spotlight PE** is the installer environment.
+**Spotlight NT** is the NT kernel. **Spotlight X** is the operating system built on it.
+**Spotlight PE** is the installer and recovery environment.
 
 <br>
 
-![Stage](https://img.shields.io/badge/stage-M2%20·%20kernel%20bring--up-2ea043?style=flat-square)
-![Progress](https://img.shields.io/badge/progress-~10%25%20to%20L3-orange?style=flat-square)
+![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-30%25%20·%20M4-2ea043?style=flat-square)
+![Spotlight X](https://img.shields.io/badge/Spotlight%20X-5%25-lightgrey?style=flat-square)
+![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-5%25-lightgrey?style=flat-square)
+![Spotlight](https://img.shields.io/badge/Spotlight%20project-18%25-orange?style=flat-square)
 ![ABI](https://img.shields.io/badge/ABI-Windows%2010%20x64%2019045-0078d4?style=flat-square)
 ![Language](https://img.shields.io/badge/language-V-4f7396?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--2.0--or--later-blue?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Overall   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~21%  (to L3)
+Spotlight NT     ██████░░░░░░░░░░░░░░  30%   kernel: M0–M2 closed, M3 75%, M4 30%
+Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro — skeleton + specs
+Spotlight PE     █░░░░░░░░░░░░░░░░░░░   5%   installer environment — docs + build skeleton
+Spotlight        ███░░░░░░░░░░░░░░░░░  18%   the project as a product (target: L3)
 ```
 
 </div>
@@ -26,10 +31,10 @@ Overall   ███████░░░░░░░░░░░░░░░░�
 
 ## What is this?
 
-Spotlight is not a Linux distribution, not a Wine wrapper, and not an emulator.
-It is a clean-room NT kernel: its own loader, its own scheduler, its own memory
-manager, its own I/O manager — and, eventually, the ability to run ordinary
-Windows `.exe` files on bare metal.
+Spotlight is not a Linux distribution, not a Wine wrapper and not an emulator.
+It is a clean-room operating system in three parts: a new NT kernel, a new
+userland with a Win32 layer, and an installer environment — built so ordinary
+Windows `.exe` files can run on bare metal.
 
 | Piece | Role | Repository |
 |---|---|---|
@@ -42,7 +47,23 @@ one truth, no guessing.
 
 ---
 
-## Status you can verify
+## Project readiness
+
+Four independent scales, so nobody confuses a working kernel with a working OS.
+
+| Scale | What it measures | Progress | Works today | Next |
+|---|---|---|---|---|
+| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **30%** (M0–M2 ✅, M3 75%, M4 30%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD | M4: sections, demand paging, higher-half |
+| **Spotlight X** | userland, Win32 layer, GUI, distro | **5%** (skeleton + specs) | repository layout, architecture and app-compatibility plans | ntdll and PE loader behind syscalls (needs L1) |
+| **Spotlight PE** | installer / recovery environment | **5%** (docs + build script) | repo, subsystem docs, `mk/build.vsh` skeleton | console/explorer on the kernel, installer flow |
+| **Spotlight** | the project as a product | **18%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
+
+> The kernel is ahead of the OS. That is expected: userland and the installer are
+> blocked on syscalls, which are blocked on the memory manager and process objects.
+
+---
+
+## What the kernel proves today
 
 No screenshots, no promises. These lines are produced by the kernel in QEMU:
 
@@ -103,7 +124,7 @@ the LAPIC timer while retiring the 8259 and PIT.
 
 ---
 
-## Stages
+## Spotlight NT — kernel stages
 
 ```
 M0  ████████████████████ 100%   Bare-metal V: UEFI app boots in QEMU/OVMF
@@ -133,6 +154,24 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | M5–M12 | Ob/Ps, syscalls, Io, Cm, Se, NTFS, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | distributable OS image | ⬜ | — |
+
+---
+
+## Spotlight X and Spotlight PE
+
+The public project is not the kernel alone. The other two pieces exist, but they
+are honestly at the planning stage — they cannot run before the kernel exposes
+processes and system calls.
+
+| | Spotlight X | Spotlight PE |
+|---|---|---|
+| **Today** | userland/distro skeleton, architecture and compatibility docs, app-corpus format | installer/recovery design, console/explorer/installer contracts, working `mk/build.vsh` |
+| **Blocked on** | syscalls (L1) and object manager (M5) | the same, plus storage (M10) and the X image format |
+| **Next** | ntdll skeleton and PE loader behind `Nt*` stubs | console over COM1/framebuffer once ring 3 exists |
+| **Progress** | 5% | 5% |
+
+That is why the overall project sits at 18% while the kernel is at 30%: the OS
+needs the kernel to finish first, not the other way around.
 
 ---
 

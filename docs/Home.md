@@ -5,16 +5,21 @@
 ---
 
 ```
-Overall   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~21% to L3
+Spotlight NT     ██████░░░░░░░░░░░░░░  30%   kernel: M0–M2 closed, M3 75%, M4 30%
+Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro
+Spotlight PE     █░░░░░░░░░░░░░░░░░░░   5%   installer environment
+Spotlight        ███░░░░░░░░░░░░░░░░░  18%   the project as a product (target: L3)
 ```
 
-**Current state:** M0 and M1 are closed, M2 is in progress. Our own UEFI loader
-boots a PE32+ kernel written in V, exits boot services, builds identity page
-tables and enters `KiSystemStartup`. The kernel brings up COM1, GDT/TSS/IDT,
-exception handling, KPCR, hardware interrupts (PIC/PIT), a bugcheck path, and the
-first M3 pieces: ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, a calibrated LAPIC
-timer replacing the 8259/PIT, one IOAPIC line routed end-to-end, and PCI bus
-enumeration.
+**Current state:** M0 and M1 are closed, M2 is closed, M3 is at 75% and M4 has
+started. Our own UEFI loader boots a PE32+ kernel written in V, exits boot
+services, builds identity page tables and enters `KiSystemStartup`. The kernel
+brings up COM1, GDT/TSS/IDT, exception handling, KPCR, hardware interrupts
+(PIC/PIT), a bugcheck path, the first M3 pieces — ACPI/MADT, LAPIC/IOAPIC, IRQL,
+spinlocks, a calibrated LAPIC timer replacing the 8259/PIT, one IOAPIC line
+routed end-to-end, PCI bus enumeration — and the first M4 pieces: a PFN page
+database, kernel pool, own page tables with CR3 switch, a page-fault handler and
+a VAD table.
 
 ---
 
