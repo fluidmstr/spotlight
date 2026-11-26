@@ -10,18 +10,29 @@
 ```
 M0  ████████████████████ 100%   ✅
 M1  ████████████████████ 100%   ✅
-M2  ███████████████░░░░░  75%   🟡
-M3  ░░░░░░░░░░░░░░░░░░░░   0%
-...
-Overall  ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~10% to L3
+M2  ████████████████████ 100%   ✅
+M3  ████████░░░░░░░░░░░░  40%   🟡
+M4  ░░░░░░░░░░░░░░░░░░░░   0%
+M5  ░░░░░░░░░░░░░░░░░░░░   0%
+M6  ░░░░░░░░░░░░░░░░░░░░   0%
+M7  ░░░░░░░░░░░░░░░░░░░░   0%
+M8  ░░░░░░░░░░░░░░░░░░░░   0%
+M9  ░░░░░░░░░░░░░░░░░░░░   0%
+M10 ░░░░░░░░░░░░░░░░░░░░   0%
+M11 ░░░░░░░░░░░░░░░░░░░░   0%
+M12 ░░░░░░░░░░░░░░░░░░░░   0%
+M13 ░░░░░░░░░░░░░░░░░░░░   0%
+M14 ░░░░░░░░░░░░░░░░░░░░   0%
+
+Overall  █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~13% to L3
 ```
 
 | Stage | Scope | State |
 |---|---|---|
 | **M0** | UEFI app in V, no libc, no runtime | ✅ |
 | **M1** | loader, PE32+, `ExitBootServices`, own CR3, handoff | ✅ |
-| **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | 🟡 75% |
-| **M3** | APIC/IOAPIC/HPET, PCI, SMP | ⬜ |
+| **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
+| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, HPET, PCI, SMP | 🟡 40% |
 | **M4** | Mm: PFN database, paging, sections, pools | ⬜ |
 | **M5** | Ob/Ps: objects, processes, threads, APC | ⬜ |
 | **M6** | syscalls, first ring-3 process | ⬜ |
@@ -34,22 +45,37 @@ Overall  ████░░░░░░░░░░░░░░░░░░░�
 | **M13** | Track A: real MS drivers and userland | 🔬 |
 | **M14** | Spotlight X 1.0: image, installer | ⬜ |
 
-### M2, in detail
-
-Done:
+### M2, in detail — closed
 
 * COM1 16550 polling driver with loopback self-test.
 * `vrt` log sink, `fmt_hex`/`fmt_dec`, `info_kv`/`err_kv`.
 * GDT with kernel/user selectors, TSS + IST stacks, `ltr`.
 * IDT 0..31, 32 asm stubs, `ke_exception_dispatch` → `EXC <n>`.
 * KPCR/KPRCB at `GS` base (`GS:[0x188]` = CurrentThread).
-* `bugcheck(code, subsys, msg)`.\n* 8259 remap, PIT 100 Hz, 16 IRQ stubs with `iretq`, `sti`; `pit_ticks=0x3` observed.
+* `bugcheck(code, subsys, msg)` and `assert_failed`.
+* 8259 remap, PIT 100 Hz, 16 IRQ stubs with `iretq`, `sti`; `pit_ticks=0x3`.
+
+### M3, in detail — 40%
+
+Done:
+
+* **ACPI**: RSDP → XSDT/RSDT → MADT parser, host-tested on synthetic tables.
+  Signatures are inline literals (pointer consts are null without `_vinit`).
+* **MADT values from QEMU**: LAPIC `0xfee00000`, IOAPIC `0xfec00000`, 5 ISO overrides.
+* **LAPIC**: enable, ID, EOI, periodic timer API (not yet the active timer).
+* **IOAPIC**: init, redirection table, masking; version `0x170020` read back.
+* **IRQL**: CR8-based raise/lower, `current_irql`; measured `0 → 2 → 0`.
+  QEMU stores IRQL in the low nibble (`CR8 = 2`, not `0x20`).
+* **Spinlocks**: `Kspin_lock` with `lock cmpxchg`, IRQL-paired acquire/release.
+* **HPET**: capabilities, counter, frequency, tick/us conversions (driver only).
 
 Remaining:
 
-* PIC remap + PIT 100 Hz + IRQ stubs (`iretq` frame), `sti`.
-* Tick counter in the log, boot test for interrupts.
-* APIC/HPET transition (M3).
+* Switch the timer from PIT to LAPIC/HPET; route IOAPIC lines; mask 8259 fully.
+* PCI enumeration (ECAM + legacy), resource discovery.
+* SMP: per-CPU KPCR, INIT-SIPI-SIPI, AP bring-up.
+* Adopt IRQL/spinlocks in klog and the scheduler paths.
+* Calibrate the APIC bus frequency instead of assuming 100 MHz.
 
 ---
 
@@ -80,8 +106,7 @@ After M7 the project makes a factual decision, not an emotional one:
 | Otherwise | freeze Track A, ship Track B |
 
 Track **B** (our kernel + our userland, Wine-derived DLLs where allowed) is the
-main line. Track **A** (real Microsoft userland) is a probe into how accurate the
-ABI really is.
+main line. Track **A** (real Microsoft userland) probes ABI accuracy.
 
 ---
 
@@ -96,8 +121,8 @@ With 5–6 senior engineers plus AI agents:
 | L4 | +12–18 months |
 | L5 | 7+ years, no guarantees |
 
-The hard parts are not typing code. They are ABI archaeology, debugging drivers
-you did not write, and hardware diversity. AI accelerates volume, not truth.
+The hard parts are ABI archaeology, debugging drivers you did not write, and
+hardware diversity. AI accelerates volume, not truth.
 
 ---
 
@@ -108,10 +133,3 @@ you did not write, and hardware diversity. AI accelerates volume, not truth.
 3. Estimates are revised monthly and publicly.
 4. Scope creep is rejected with a link to this page.
 5. "Works on QEMU" ≠ "works everywhere"; hardware labs start at M3.
-
----
-
-## Next
-
-* [Compatibility](Compatibility.md)
-* [Architecture](Architecture.md)

@@ -17,7 +17,7 @@
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Overall   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   ~10%  (to L3)
+Overall   █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   ~13%  (to L3)
 ```
 
 </div>
@@ -56,6 +56,12 @@ I [boot] loader block accepted
 I [boot] image_base=0x7bd37000
 I [ke] GDT, TSS and IDT loaded; exceptions report to debugcon
 I [ke] KPCR installed at GS base
+I [ke] irql=0x0
+I [ke] irql_raised=0x2
+I [acpi] lapic_base=0xfee00000
+I [acpi] ioapic_base=0xfec00000
+I [hal] lapic_id=0x0
+I [hal] ioapic_version=0x170020
 I [hal] PIC and PIT ready; enabling interrupts
 I [hal] pit_ticks=0x3
 I [serial] loopback self-test passed
@@ -65,7 +71,7 @@ And the machine itself proves the rest:
 
 | Test | Command | Result |
 |---|---|---|
-| Boot regression | `v run mk/build.vsh -- test-boot` | 11/11 serial expectations |
+| Boot regression | `v run mk/build.vsh -- test-boot` | 16/16 serial expectations |
 | Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `timer-ok` |
 | Exception routing | `v run mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
 | Bugcheck path | `v run mk/build.vsh -- test-bugcheck` | `BUGCHECK 0x50000001` |
@@ -73,8 +79,9 @@ And the machine itself proves the rest:
 
 What this means: our own UEFI loader reads a PE32+ kernel, allocates pages, applies
 relocations, exits boot services, builds its own page tables, switches CR3, installs
-a kernel stack and enters `KiSystemStartup`. The kernel then brings up COM1, GDT, TSS,
-IDT, exception handling and the per-CPU GS base.
+a kernel stack and enters `KiSystemStartup`. The kernel brings up COM1, GDT, TSS,
+IDT, exception handling, the per-CPU GS base, hardware interrupts, and the first
+M3 pieces — ACPI/MADT, LAPIC/IOAPIC and IRQL.
 
 ---
 
@@ -83,8 +90,8 @@ IDT, exception handling and the per-CPU GS base.
 ```
 M0  ████████████████████ 100%   Bare-metal V: UEFI app boots in QEMU/OVMF
 M1  ████████████████████ 100%   Loader: PE32+, ExitBootServices, own CR3, handoff
-M2  ███████████████░░░░░  75%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
-M3  ░░░░░░░░░░░░░░░░░░░░   0%   HAL: APIC, PCI, SMP, timers
+M2  ████████████████████ 100%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
+M3  ████████░░░░░░░░░░░░  40%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, HPET
 M4  ░░░░░░░░░░░░░░░░░░░░   0%   Memory manager: PFN, paging, sections
 M5  ░░░░░░░░░░░░░░░░░░░░   0%   Objects, processes, threads
 M6  ░░░░░░░░░░░░░░░░░░░░   0%   System calls, first ring-3 process
@@ -102,8 +109,8 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 |---|---|---|---|
 | **M0** | UEFI app on V, zero libc | ✅ closed | banner + memory map in QEMU/OVMF |
 | **M1** | loader, PE32+, ExitBootServices, CR3 | ✅ closed | `EXIT / PGON / JUMP` on debugcon |
-| **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | 🟡 75% | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
-| M3 | PIC/PIT → APIC/HPET, PCI, SMP | ⬜ next | — |
+| **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | ✅ closed | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
+| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, HPET | 🟡 40% | `lapic_base=0xfee00000`, `ioapic_version=0x170020`, `irql 0→2→0` |
 | M4–M12 | Mm, Ob/Ps, syscalls, Io, Cm, Se, NTFS, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | distributable OS image | ⬜ | — |
@@ -172,6 +179,12 @@ Expected tail of `build/serial.log`:
 I [boot] KiSystemStartup entered
 I [ke] GDT, TSS and IDT loaded; exceptions report to debugcon
 I [ke] KPCR installed at GS base
+I [ke] irql=0x0
+I [ke] irql_raised=0x2
+I [acpi] lapic_base=0xfee00000
+I [acpi] ioapic_base=0xfec00000
+I [hal] lapic_id=0x0
+I [hal] ioapic_version=0x170020
 I [hal] PIC and PIT ready; enabling interrupts
 I [hal] pit_ticks=0x3
 I [serial] loopback self-test passed

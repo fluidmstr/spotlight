@@ -40,7 +40,12 @@ I [boot] loader block accepted
 I [boot] image_base=0x
 I [ke] GDT, TSS and IDT loaded
 I [ke] KPCR installed at GS base
+I [ke] irql=0x0
+I [ke] irql_raised=0x2
+I [acpi] lapic_base=0xfee00000
+I [acpi] ioapic_base=0xfec00000
 I [hal] lapic_id=0x
+I [hal] ioapic_version=0x
 I [hal] PIC and PIT ready
 I [hal] pit_ticks=0x
 I [serial] loopback self-test passed
@@ -56,7 +61,7 @@ v run tools/vm/qemu.vsh -- run-efi --expect tests/boot/m2_serial.lines
 Output on success:
 
 ```
-boot test passed: 11 expectations matched
+boot test passed: 16 expectations matched
 ```
 
 On failure it prints every missing line and exits 1.
