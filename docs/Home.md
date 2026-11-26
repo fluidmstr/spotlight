@@ -5,13 +5,13 @@
 ---
 
 ```
-Overall   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~10% to L3
+Overall   ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~11% to L3
 ```
 
 **Current state:** M0 and M1 are closed, M2 is in progress. Our own UEFI loader
 boots a PE32+ kernel written in V, exits boot services, builds identity page
 tables and enters `KiSystemStartup`. The kernel brings up COM1, GDT/TSS/IDT,
-exception handling, KPCR and a bugcheck path.
+exception handling, KPCR, hardware interrupts (PIC/PIT) and a bugcheck path.
 
 ---
 
@@ -50,10 +50,12 @@ I [boot] loader block accepted
 I [boot] image_base=0x7bd37000
 I [ke] GDT, TSS and IDT loaded; exceptions report to debugcon
 I [ke] KPCR installed at GS base
+I [hal] PIC and PIT ready; enabling interrupts
+I [hal] pit_ticks=0x3
 I [serial] loopback self-test passed
 ```
 
-Self-tests: `test-boot` (8/8 lines), `test-exception` (`EXC 3`);
+Self-tests: `test-boot` (10/10 lines), `test-exception` (`EXC 3`);
 `test-bugcheck` (`BUGCHECK 0x50000001`).
 
 ---

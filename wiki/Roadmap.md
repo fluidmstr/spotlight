@@ -10,7 +10,7 @@
 ```
 M0  ████████████████████ 100%   ✅
 M1  ████████████████████ 100%   ✅
-M2  ████████████░░░░░░░░  60%   🟡
+M2  ███████████████░░░░░  75%   🟡
 M3  ░░░░░░░░░░░░░░░░░░░░   0%
 ...
 Overall  ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~10% to L3
@@ -20,7 +20,7 @@ Overall  ████░░░░░░░░░░░░░░░░░░░�
 |---|---|---|
 | **M0** | UEFI app in V, no libc, no runtime | ✅ |
 | **M1** | loader, PE32+, `ExitBootServices`, own CR3, handoff | ✅ |
-| **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, bugcheck | 🟡 60% |
+| **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | 🟡 75% |
 | **M3** | APIC/IOAPIC/HPET, PCI, SMP | ⬜ |
 | **M4** | Mm: PFN database, paging, sections, pools | ⬜ |
 | **M5** | Ob/Ps: objects, processes, threads, APC | ⬜ |
@@ -43,7 +43,7 @@ Done:
 * GDT with kernel/user selectors, TSS + IST stacks, `ltr`.
 * IDT 0..31, 32 asm stubs, `ke_exception_dispatch` → `EXC <n>`.
 * KPCR/KPRCB at `GS` base (`GS:[0x188]` = CurrentThread).
-* `bugcheck(code, subsys, msg)`.
+* `bugcheck(code, subsys, msg)`.\n* 8259 remap, PIT 100 Hz, 16 IRQ stubs with `iretq`, `sti`; `pit_ticks=0x3` observed.
 
 Remaining:
 

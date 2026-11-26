@@ -21,7 +21,7 @@ foundation.
   klog sink and formatter, GDT with user selectors, TSS with IST stacks, IDT with
   vectors 0..31, 32 exception stubs, `ke_exception_dispatch`, KPCR/KPRCB at the GS
   base (`GS:[0x188]`), `bugcheck`/`assert_failed`.
-- `Loader_block` ABI specification and offset tests (`sizeof == 0x70`).
+- 8259 PIC remap, PIT at 100 Hz, 16 IRQ stubs with a correct `iretq` frame; interrupts enabled and `pit_ticks=0x3` observed in QEMU.\n- `Loader_block` ABI specification and offset tests (`sizeof == 0x70`).
 - Tooling: `ssdt-gen`, `symgen`, `pdb-abi`, `version` stamping, QEMU harness with
   serial expectations.
 - Documentation: 12 guides plus kernel architecture, ABI and legal chapters.
@@ -30,7 +30,7 @@ foundation.
 
 | Check | Result |
 |---|---|
-| `mk/build.vsh -- test-boot` | 8/8 serial expectations |
+| `mk/build.vsh -- test-boot` | 10/10 serial expectations |
 | `mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
 | `mk/build.vsh -- test-bugcheck` | `BUGCHECK 0x50000001` |
 | `mk/build.vsh -- test` | 5/5 host suites |

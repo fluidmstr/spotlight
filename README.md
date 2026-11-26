@@ -56,6 +56,8 @@ I [boot] loader block accepted
 I [boot] image_base=0x7bd37000
 I [ke] GDT, TSS and IDT loaded; exceptions report to debugcon
 I [ke] KPCR installed at GS base
+I [hal] PIC and PIT ready; enabling interrupts
+I [hal] pit_ticks=0x3
 I [serial] loopback self-test passed
 ```
 
@@ -80,7 +82,7 @@ IDT, exception handling and the per-CPU GS base.
 ```
 M0  ████████████████████ 100%   Bare-metal V: UEFI app boots in QEMU/OVMF
 M1  ████████████████████ 100%   Loader: PE32+, ExitBootServices, own CR3, handoff
-M2  ████████████░░░░░░░░  60%   Kernel bring-up: serial, GDT/IDT, KPCR, bugcheck
+M2  ███████████████░░░░░  75%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
 M3  ░░░░░░░░░░░░░░░░░░░░   0%   HAL: APIC, PCI, SMP, timers
 M4  ░░░░░░░░░░░░░░░░░░░░   0%   Memory manager: PFN, paging, sections
 M5  ░░░░░░░░░░░░░░░░░░░░   0%   Objects, processes, threads
@@ -99,7 +101,7 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 |---|---|---|---|
 | **M0** | UEFI app on V, zero libc | ✅ closed | banner + memory map in QEMU/OVMF |
 | **M1** | loader, PE32+, ExitBootServices, CR3 | ✅ closed | `EXIT / PGON / JUMP` on debugcon |
-| **M2** | COM1, GDT/TSS/IDT, KPCR, bugcheck | 🟡 60% | serial log, `EXC 3`, `BUGCHECK 0x50000001` |
+| **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | 🟡 75% | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
 | M3 | PIC/PIT → APIC/HPET, PCI, SMP | ⬜ next | — |
 | M4–M12 | Mm, Ob/Ps, syscalls, Io, Cm, Se, NTFS, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
@@ -169,6 +171,8 @@ Expected tail of `build/serial.log`:
 I [boot] KiSystemStartup entered
 I [ke] GDT, TSS and IDT loaded; exceptions report to debugcon
 I [ke] KPCR installed at GS base
+I [hal] PIC and PIT ready; enabling interrupts
+I [hal] pit_ticks=0x3
 I [serial] loopback self-test passed
 ```
 
