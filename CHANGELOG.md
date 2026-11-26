@@ -75,6 +75,19 @@ foundation.
     marker (`syscall-user-ok`), proving the round-trip. The GDT was migrated to
     the 19045 selectors after reading `IA32_STAR` in `HalInitSystem`
     (kernel `0x10`, user `0x33`/`0x2B`, TSS `0x40`), and `FMASK` is `0x4700`.
+  - **First syscall handler.** `NtQuerySystemTime` (0x5a) reads
+    `KUSER_SHARED_DATA` through the kernel alias `0xFFFFF780_00000000`,
+    validates the user pointer (`U/S` on every level) and copies the FILETIME.
+    `test-ring3` now does `NtQuerySystemTime(buf)`, reads `*buf` in CPL3 and
+    sends the value back through a second `SYSCALL`; the test compares it with
+    `kshared-time=`. `KUSER_SHARED_DATA` is at the kernel alias only; the user
+    address `0x7FFE0000` needs 2 MiB identity-page splitting.
+  - **M5 (started) — EPROCESS/KTHREAD skeleton.** Verified packed layouts
+    (`KTHREAD 0x430`, `ETHREAD 0x898`, `KPROCESS 0x438`, `EPROCESS 0xa40`) in
+    `kernel/include/ps.v`, host ABI asserts, and one static System process
+    (`PID 4`) / thread (`TID 4`) with `DirectoryTableBase = CR3`. The syscall
+    stack now lives after the ETHREAD in `ps.Spot_thread`; `ps-ready` and the
+    per-thread stack address are in the boot log.
   - VAD table: insert/find/remove over 64 ranges with host tests and a boot
     smoke test (`vad-ok`).
   - **ABI oracle**: a licensed Windows 10 22H2 image + public PDB symbols were
