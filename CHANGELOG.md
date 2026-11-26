@@ -38,6 +38,11 @@ foundation.
     as the active timer.
   - LAPIC timer takeover: periodic vector `0x40`, APIC EOI routing, 8259 and PIT
     masked; `lapic_timer-ok` / `lapic_timer_ticks=0xa` observed in QEMU.
+  - APIC bus frequency calibrated against HPET (PIT fallback): QEMU q35 measures
+    ~998 MHz, not the assumed 100 MHz.
+  - IOAPIC routed end-to-end: ISA IRQ0 → GSI 2 → vector `0x30`, 5 ticks with the
+    8259 masked.
+  - PCI bus-0 enumeration via mechanism #1: 6 functions, host bridge `8086:29c0`.
 - `Loader_block` ABI specification and offset tests (`sizeof == 0x70`).
 - Tooling: `ssdt-gen`, `symgen`, `pdb-abi`, version stamping, QEMU harness with
   serial expectations.
@@ -47,7 +52,7 @@ foundation.
 
 | Check | Result |
 |---|---|
-| `mk/build.vsh -- test-boot` | 19/19 serial expectations |
+| `mk/build.vsh -- test-boot` | 25/25 serial expectations |
 | `mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | `mk/build.vsh -- test-timer` | 10 sustained interrupts (`timer-ok`) |
 | `mk/build.vsh -- test-exception` | `EXC 3` on debugcon |

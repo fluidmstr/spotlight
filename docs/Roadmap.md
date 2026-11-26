@@ -11,7 +11,7 @@
 M0  ████████████████████ 100%   ✅
 M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
-M3  ███████████░░░░░░░░░  55%   🟡
+M3  ███████████████░░░░░  75%   🟡
 M4  ░░░░░░░░░░░░░░░░░░░░   0%
 M5  ░░░░░░░░░░░░░░░░░░░░   0%
 M6  ░░░░░░░░░░░░░░░░░░░░   0%
@@ -24,7 +24,7 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~15% to L3
+Overall  ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~18% to L3
 ```
 
 | Stage | Scope | State |
@@ -32,7 +32,7 @@ Overall  ██████░░░░░░░░░░░░░░░░░�
 | **M0** | UEFI app in V, no libc, no runtime | ✅ |
 | **M1** | loader, PE32+, `ExitBootServices`, own CR3, handoff | ✅ |
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
-| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, LAPIC timer, PCI, SMP | 🟡 55% |
+| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
 | **M4** | Mm: PFN database, paging, sections, pools | ⬜ |
 | **M5** | Ob/Ps: objects, processes, threads, APC | ⬜ |
 | **M6** | syscalls, first ring-3 process | ⬜ |
@@ -70,14 +70,18 @@ Done:
 * **HPET**: capabilities, counter, frequency, tick/us conversions (driver only).
 * **LAPIC timer takeover**: periodic vector `0x40`, APIC EOI routing, 8259 and PIT
   masked; `lapic_timer-ok` and `lapic_timer_ticks=0xa` observed.
+* **APIC bus calibration**: one-shot countdown measured against HPET (PIT fallback);
+  QEMU q35 measures ~998 MHz instead of the assumed 100 MHz.
+* **IOAPIC end-to-end**: ISA IRQ0 → GSI 2 → vector `0x30`; 5 ticks observed while
+  the 8259 is masked.
+* **PCI enumeration**: mechanism #1 on bus 0; 6 functions, host bridge `8086:29c0`.
 
 Remaining:
 
-* Route IOAPIC lines for external devices; keep the 8259 masked for good.
-* PCI enumeration (ECAM + legacy), resource discovery.
 * SMP: per-CPU KPCR, INIT-SIPI-SIPI, AP bring-up.
 * Adopt IRQL/spinlocks in klog and the scheduler paths.
-* Calibrate the APIC bus frequency instead of assuming 100 MHz.
+* ECAM/MCFG, BAR discovery and device-to-GSI wiring for real drivers.
+* HPET as a stable time source (currently calibration only); TSC deadline timer.
 
 ---
 

@@ -17,7 +17,7 @@
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Overall   ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~15%  (to L3)
+Overall   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~18%  (to L3)
 ```
 
 </div>
@@ -67,6 +67,12 @@ I [hal] pit_ticks=0x3
 I [hal] PIC and PIT masked; LAPIC timer is the time source
 I [hal] lapic_timer-ok
 I [hal] lapic_timer_ticks=0xa
+I [hal] lapic_bus_hz=0x3b735060
+I [hal] ioapic_gsi0=0x2
+I [hal] ioapic_irq-ok
+I [hal] ioapic_irq_ticks=0x5
+I [pci] devices=0x6
+I [pci] first=0x29c08086
 I [serial] loopback self-test passed
 ```
 
@@ -74,7 +80,7 @@ And the machine itself proves the rest:
 
 | Test | Command | Result |
 |---|---|---|
-| Boot regression | `v run mk/build.vsh -- test-boot` | 19/19 serial expectations |
+| Boot regression | `v run mk/build.vsh -- test-boot` | 25/25 serial expectations |
 | LAPIC timer | `v run mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `pit_timer-ok` |
 | Exception routing | `v run mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
@@ -96,7 +102,7 @@ the LAPIC timer while retiring the 8259 and PIT.
 M0  ████████████████████ 100%   Bare-metal V: UEFI app boots in QEMU/OVMF
 M1  ████████████████████ 100%   Loader: PE32+, ExitBootServices, own CR3, handoff
 M2  ████████████████████ 100%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
-M3  ███████████░░░░░░░░░  55%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, LAPIC timer
+M3  ███████████████░░░░░  75%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI
 M4  ░░░░░░░░░░░░░░░░░░░░   0%   Memory manager: PFN, paging, sections
 M5  ░░░░░░░░░░░░░░░░░░░░   0%   Objects, processes, threads
 M6  ░░░░░░░░░░░░░░░░░░░░   0%   System calls, first ring-3 process
@@ -115,7 +121,7 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | **M0** | UEFI app on V, zero libc | ✅ closed | banner + memory map in QEMU/OVMF |
 | **M1** | loader, PE32+, ExitBootServices, CR3 | ✅ closed | `EXIT / PGON / JUMP` on debugcon |
 | **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | ✅ closed | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
-| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, LAPIC timer | 🟡 55% | `lapic_base=0xfee00000`, `lapic_timer-ok`, `lapic_timer_ticks=0xa` |
+| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI | 🟡 75% | `lapic_bus_hz≈998MHz`, `ioapic_irq-ok`, `pci devices=6` |
 | M4–M12 | Mm, Ob/Ps, syscalls, Io, Cm, Se, NTFS, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | distributable OS image | ⬜ | — |
@@ -195,6 +201,12 @@ I [hal] pit_ticks=0x3
 I [hal] PIC and PIT masked; LAPIC timer is the time source
 I [hal] lapic_timer-ok
 I [hal] lapic_timer_ticks=0xa
+I [hal] lapic_bus_hz=0x3b735060
+I [hal] ioapic_gsi0=0x2
+I [hal] ioapic_irq-ok
+I [hal] ioapic_irq_ticks=0x5
+I [pci] devices=0x6
+I [pci] first=0x29c08086
 I [serial] loopback self-test passed
 ```
 

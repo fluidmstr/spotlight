@@ -53,6 +53,12 @@ I [hal] pit_ticks=0x
 I [hal] PIC and PIT masked
 I [hal] lapic_timer-ok
 I [hal] lapic_timer_ticks=0x
+I [hal] lapic_bus_hz=0x
+I [hal] ioapic_gsi0=0x2
+I [hal] ioapic_irq-ok
+I [hal] ioapic_irq_ticks=0x
+I [pci] devices=0x
+I [pci] first=0x
 I [serial] loopback self-test passed
 ```
 
@@ -66,7 +72,7 @@ v run tools/vm/qemu.vsh -- run-efi --expect tests/boot/m2_serial.lines
 Output on success:
 
 ```
-boot test passed: 19 expectations matched
+boot test passed: 25 expectations matched
 ```
 
 On failure it prints every missing line and exits 1.
