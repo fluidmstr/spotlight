@@ -17,7 +17,7 @@
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Overall   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~19%  (to L3)
+Overall   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~21%  (to L3)
 ```
 
 </div>
@@ -74,8 +74,11 @@ I [hal] ioapic_irq_ticks=0x5
 I [pci] devices=0x6
 I [pci] first=0x29c08086
 I [mm] free_pages=0x7ac8f
+I [mm] paging-on
+I [mm] cr3=0x100000
 I [mm] alloc-free-ok
 I [mm] pool-ok
+I [mm] vad-ok
 I [serial] loopback self-test passed
 ```
 
@@ -83,7 +86,8 @@ And the machine itself proves the rest:
 
 | Test | Command | Result |
 |---|---|---|
-| Boot regression | `v run mk/build.vsh -- test-boot` | 28/28 serial expectations |
+| Boot regression | `v run mk/build.vsh -- test-boot` | 31/31 serial expectations |
+| Page fault | `v run mk/build.vsh -- test-pf` | `PF cr2=0x100000000`, bugcheck `0x50000020` |
 | LAPIC timer | `v run mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `pit_timer-ok` |
 | Exception routing | `v run mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
@@ -106,7 +110,7 @@ M0  ████████████████████ 100%   Bare-met
 M1  ████████████████████ 100%   Loader: PE32+, ExitBootServices, own CR3, handoff
 M2  ████████████████████ 100%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
 M3  ███████████████░░░░░  75%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI
-M4  ██░░░░░░░░░░░░░░░░░░  10%   Memory manager: PFN, paging, sections
+M4  ██████░░░░░░░░░░░░░  30%   Memory manager: PFN, paging, sections
 M5  ░░░░░░░░░░░░░░░░░░░░   0%   Objects, processes, threads
 M6  ░░░░░░░░░░░░░░░░░░░░   0%   System calls, first ring-3 process
 M7  ░░░░░░░░░░░░░░░░░░░░   0%   I/O manager, PnP, power  ← gate G2
@@ -125,7 +129,7 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | **M1** | loader, PE32+, ExitBootServices, CR3 | ✅ closed | `EXIT / PGON / JUMP` on debugcon |
 | **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | ✅ closed | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI | 🟡 75% | `lapic_bus_hz≈998MHz`, `ioapic_irq-ok`, `pci devices=6` |
-| **M4** | Mm: PFN page database, kernel pool | 🟡 10% | `mm free_pages=0x7ac8f`, `alloc-free-ok`, `pool-ok` |
+| **M4** | Mm: PFN page database, kernel pool, page tables, VAD | 🟡 30% | `paging-on`, `cr3=0x100000`, `PF cr2=0x100000000`, `vad-ok` |
 | M5–M12 | Ob/Ps, syscalls, Io, Cm, Se, NTFS, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | distributable OS image | ⬜ | — |
@@ -212,8 +216,11 @@ I [hal] ioapic_irq_ticks=0x5
 I [pci] devices=0x6
 I [pci] first=0x29c08086
 I [mm] free_pages=0x7ac8f
+I [mm] paging-on
+I [mm] cr3=0x100000
 I [mm] alloc-free-ok
 I [mm] pool-ok
+I [mm] vad-ok
 I [serial] loopback self-test passed
 ```
 

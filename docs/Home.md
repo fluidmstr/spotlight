@@ -5,7 +5,7 @@
 ---
 
 ```
-Overall   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~19% to L3
+Overall   ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~21% to L3
 ```
 
 **Current state:** M0 and M1 are closed, M2 is in progress. Our own UEFI loader
@@ -71,12 +71,15 @@ I [hal] ioapic_irq_ticks=0x5
 I [pci] devices=0x6
 I [pci] first=0x29c08086
 I [mm] free_pages=0x7ac8f
+I [mm] paging-on
+I [mm] cr3=0x100000
 I [mm] alloc-free-ok
 I [mm] pool-ok
+I [mm] vad-ok
 I [serial] loopback self-test passed
 ```
 
-Self-tests: `test-boot` (28/28 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`);
+Self-tests: `test-boot` (31/31 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`);
 `test-bugcheck` (`BUGCHECK 0x50000001`).
 
 ---

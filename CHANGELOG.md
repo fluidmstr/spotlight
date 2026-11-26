@@ -47,6 +47,12 @@ foundation.
   (conventional pages only, first 1 MiB reserved), allocation bitmap so reserved
   pages cannot be freed, contiguous allocator, and a first-fit kernel pool.
   QEMU: `free_pages=0x7ac8f` (~1.9 GiB), alloc/free round-trip and pool reuse pass.
+  - Own page tables: identity map of 4 GiB with 2 MiB pages, CR3 switch with
+    readback (`cr3=0x100000`, `paging-on`).
+  - Page-fault handler: logs CR2 and the error code, then bugchecks; `test-pf`
+    faults at `0x100000000` and observes `PF cr2/err`.
+  - VAD table: insert/find/remove over 64 ranges with host tests and a boot
+    smoke test (`vad-ok`).
 - `Loader_block` ABI specification and offset tests (`sizeof == 0x70`).
 - Tooling: `ssdt-gen`, `symgen`, `pdb-abi`, version stamping, QEMU harness with
   serial expectations.
@@ -56,7 +62,7 @@ foundation.
 
 | Check | Result |
 |---|---|
-| `mk/build.vsh -- test-boot` | 28/28 serial expectations |
+| `mk/build.vsh -- test-boot` | 31/31 serial expectations |
 | `mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | `mk/build.vsh -- test-timer` | 10 sustained interrupts (`timer-ok`) |
 | `mk/build.vsh -- test-exception` | `EXC 3` on debugcon |

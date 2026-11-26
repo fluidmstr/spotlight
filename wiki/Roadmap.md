@@ -12,7 +12,7 @@ M0  ████████████████████ 100%   ✅
 M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
-M4  ██░░░░░░░░░░░░░░░░░░  10%
+M4  ██████░░░░░░░░░░░░░  30%
 M5  ░░░░░░░░░░░░░░░░░░░░   0%
 M6  ░░░░░░░░░░░░░░░░░░░░   0%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
@@ -24,7 +24,7 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~19% to L3
+Overall  ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~21% to L3
 ```
 
 | Stage | Scope | State |
@@ -33,7 +33,7 @@ Overall  ███████░░░░░░░░░░░░░░░░�
 | **M1** | loader, PE32+, `ExitBootServices`, own CR3, handoff | ✅ |
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
-| **M4** | Mm: PFN page database, kernel pool, paging, sections | 🟡 10% |
+| **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 30% |
 | **M5** | Ob/Ps: objects, processes, threads, APC | ⬜ |
 | **M6** | syscalls, first ring-3 process | ⬜ |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
