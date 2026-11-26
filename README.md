@@ -76,7 +76,7 @@ And the machine itself proves the rest:
 |---|---|---|
 | Boot regression | `v run mk/build.vsh -- test-boot` | 19/19 serial expectations |
 | LAPIC timer | `v run mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
-| Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `timer-ok` |
+| Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `pit_timer-ok` |
 | Exception routing | `v run mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
 | Bugcheck path | `v run mk/build.vsh -- test-bugcheck` | `BUGCHECK 0x50000001` |
 | Host unit tests | `v run mk/build.vsh -- test` | 5/5 suites |

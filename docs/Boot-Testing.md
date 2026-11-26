@@ -21,7 +21,7 @@ v run mk/build.vsh -- test-bugcheck
 | `test` | PE parser, page tables, ssdt-gen, symgen, Loader_block offsets |
 | `test-boot` | loader and kernel milestones on COM1 |
 | `test-lapic` | LAPIC timer takes over, PIC/PIT masked |
-| `test-timer` | 10 sustained PIT interrupts (`timer-ok`) |
+| `test-timer` | 10 sustained PIT interrupts (`pit_timer-ok`) |
 | `test-exception` | a deliberate `int3` reaches the IDT dispatcher (`EXC 3`) |
 | `test-bugcheck` | `ke.bugcheck()` prints `BUGCHECK 0x50000001` and halts |
 
