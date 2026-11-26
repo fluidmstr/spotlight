@@ -92,22 +92,23 @@ Done:
   allocator above 8 GiB.
 * **M5 (35%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, and preemptive round-robin driven by the LAPIC timer.
-* **M6 (85%)**: SYSCALL entry with stack arguments, 24 NT handlers covering
+* **M6 (85%)**: SYSCALL entry with stack arguments, 25 NT handlers covering
   file, memory, event, time and process/system queries; PE32+ loader with
   IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers signaled and zero-timeout
   waits; blocking waits return `STATUS_NOT_IMPLEMENTED`.
-* **M10 (20%)**: polling AHCI (`READ DMA`, SPOTFAT port selection), FAT32 read
-  and in-place write, a published VFS volume over a 64 KiB disk image, and the
-  NTFS parser.
+* **M10 (20%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32
+  read and in-place write, a published VFS volume over a 64 KiB disk image, write
+  through the cached volume, `NtFlushBuffersFile` synchronously flushing the whole
+  image to disk (`test-flush`), and the NTFS parser.
 
 Remaining:
 
 * M4: working sets, copy-on-write, section sharing.
 * M5: priorities and quantum, idle thread, APC delivery.
 * M6: blocking waits, remaining syscall semantics.
-* M10: block I/O abstraction, ext4 backend, cache manager.
+* M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush.
 
-Boot tests `test-disk`, `test-file`, `test-section`, `test-event`, `test-sync`,
+Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`, `test-sync`,
 `test-svc`, `test-svc3`, `test-preempt` and the host unit suites are green
 (2026-11-26).
 

@@ -8,8 +8,9 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ### Added
 
-- **24 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
-  `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27.
+- **25 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+  `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27,
+  `NtFlushBuffersFile` 0x4b.
   Memory: `NtAllocateVirtualMemory` 0x18, `NtFreeVirtualMemory` 0x1e,
   `NtProtectVirtualMemory` 0x50, `NtCreateSection` 0x4a,
   `NtMapViewOfSection` 0x28, `NtUnmapViewOfSection` 0x2a. Events:
@@ -21,8 +22,10 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   `NtYieldExecution` 0x46. Objects: `NtClose` 0x0f.
   `NtWaitForSingleObject` covers signaled and zero-timeout waits; blocking waits
   return `STATUS_NOT_IMPLEMENTED`.
-- **Storage**: polling AHCI (`READ DMA`, SPOTFAT port selection), FAT32 read and
-  in-place write, and a published VFS volume over a 64 KiB disk image.
+- **Storage**: polling AHCI (`READ DMA`/`WRITE DMA`, SPOTFAT port selection),
+  FAT32 read and in-place write, and a published VFS volume over a 64 KiB disk
+  image. Writes go through to the cached volume; `NtFlushBuffersFile` flushes the
+  whole image to the SATA disk (`test-flush` re-reads sector 34).
 - **Memory**: anonymous NT sections with demand paging; user VA allocator above
   8 GiB.
 - **Ring 3**: PE loader with IAT/TEB/PEB at CPL3; multi-argument `SYSCALL` entry
@@ -36,6 +39,7 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 | `test-boot`, `test-exe`, `test-exe-file`, `test-disk` | green |
 | `test-preempt`, `test-svc`, `test-svc3`, `test-sync` | green |
 | `test-file`, `test-section`, `test-event` | green |
+| `test-flush` (whole-image flush, device re-read) | green |
 | host unit tests | green |
 
 ---

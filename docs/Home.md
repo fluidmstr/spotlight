@@ -20,15 +20,17 @@ calibrated LAPIC timer replacing the 8259/PIT, one IOAPIC line routed end-to-end
 and PCI bus enumeration. It maps anonymous NT sections with demand paging, runs
 a preemptive round-robin scheduler, and loads a PE32+ image with IAT/TEB/PEB into
 CPL3. Storage is a polling AHCI driver over FAT32 with in-place writes, exposed
-as a published VFS volume; the kernel also has event objects, timed delays and
-an NTFS parser.
+as a published VFS volume; `NtWriteFile` writes through to the cached volume and
+`NtFlushBuffersFile` synchronously flushes the whole 64 KiB image to the SATA
+disk. The kernel also has event objects, timed delays and an NTFS parser.
 
-**Recent kernel progress:** 24 NT syscalls (file, memory, event and timing
+**Recent kernel progress:** 25 NT syscalls (file, memory, event and timing
 objects), a CPL3 PE image making a multi-argument `SYSCALL` including stack
-arguments (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume, anonymous
-NT sections with demand paging, event objects, `NtDelayExecution` and a user VA
-allocator above 8 GiB. `NtWaitForSingleObject` handles signaled and zero-timeout
-waits; blocking waits still return `STATUS_NOT_IMPLEMENTED`. There is no
+arguments (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a
+synchronous whole-image flush, anonymous NT sections with demand paging, event
+objects, `NtDelayExecution` and a user VA allocator above 8 GiB.
+`NtWaitForSingleObject` handles signaled and zero-timeout waits; blocking waits
+still return `STATUS_NOT_IMPLEMENTED`. There is no
 userland, installer or GUI yet, and no real Windows `.exe`.
 
 ---
@@ -95,7 +97,7 @@ I [serial] loopback self-test passed
 ```
 
 Self-tests: `test-boot` (33/33 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`),
-`test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file` (AHCI + FAT32 + VFS),
+`test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush),
 `test-section` (NT sections), `test-event`/`test-sync` (events + waits), `test-svc`/`test-svc3` (multi-argument SYSCALL); host unit tests.
 
 ---
