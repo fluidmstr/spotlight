@@ -4,11 +4,11 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ---
 
-## [Unreleased] — kernel I/O and syscall progress (2026-11-26)
+## [Unreleased] — kernel I/O and syscall progress (2026-11-26, updated 2026-11-27)
 
 ### Added
 
-- **31 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+- **36 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
   `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27,
   `NtFlushBuffersFile` 0x4b, `NtQueryDirectoryFile` 0x35.
   Memory: `NtAllocateVirtualMemory` 0x18, `NtFreeVirtualMemory` 0x1e,
@@ -17,11 +17,16 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   `NtCreateEvent` 0x48, `NtSetEvent` 0x0e, `NtResetEvent` 0x7a,
   `NtQueryEvent` 0x56. Timing and waits: `NtWaitForSingleObject` 0x04,
   `NtDelayExecution` 0x34, `NtQueryPerformanceCounter` 0x31,
-  `NtQuerySystemTime` 0x5a. Queries: `NtQueryInformationProcess` 0x19,
+  `NtQuerySystemTime` 0x5a, `NtQueryTimerResolution` 0x163,
+  `NtSetTimerResolution` 0x1b2 (15.625 ms). Queries: `NtQueryInformationProcess` 0x19,
   `NtQuerySystemInformation` 0x36, `NtQueryVirtualMemory` 0x23,
   `NtQueryVolumeInformationFile` 0x49, `NtYieldExecution` 0x46.
-  Objects: `NtClose` 0x0f, `NtQueryObject` 0x10 (`ObjectBasicInformation`:
-  attributes, granted access, handle/pointer counts, creation time). Threads:
+  Objects: `NtClose` 0x0f (also accepts the -1/-2 current-process/thread
+  pseudo-handles), `NtQueryObject` 0x10 (`ObjectBasicInformation`:
+  attributes, granted access, handle/pointer counts, creation time),
+  `NtOpenProcess` 0x26 and `NtOpenThread` 0x2f (validated `ClientId`, return the
+  current pseudo-handles). Cache: `NtFlushInstructionCache` 0xe9 (validated
+  no-op; x86 I-cache is coherent). Threads:
   `NtSetInformationThread` 0x0d, `NtQueryInformationThread` 0x25.
   `NtWaitForSingleObject` covers signaled and zero-timeout waits; blocking waits
   return `STATUS_NOT_IMPLEMENTED`.
@@ -42,6 +47,7 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 | `test-boot`, `test-exe`, `test-exe-file`, `test-disk` | green |
 | `test-preempt`, `test-svc`, `test-svc3`, `test-sync` | green |
 | `test-file`, `test-section`, `test-event` | green |
+| `test-misc` (timer resolution, pseudo-handle opens, I-cache flush) | green |
 | `test-flush` (whole-image flush, device re-read) | green |
 | host unit tests | green |
 

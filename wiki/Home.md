@@ -24,8 +24,9 @@ as a published VFS volume; `NtWriteFile` writes through to the cached volume and
 `NtFlushBuffersFile` synchronously flushes the whole 64 KiB image to the SATA
 disk. The kernel also has event objects, timed delays and an NTFS parser.
 
-**Recent kernel progress:** 31 NT syscalls (file, memory, event, object, timing and thread
-information), a CPL3 PE image making a multi-argument `SYSCALL` including stack
+**Recent kernel progress:** 36 NT syscalls (file, memory, event, object, timing and thread
+information, current-process/thread handle opens, timer resolution and
+instruction-cache flush), a CPL3 PE image making a multi-argument `SYSCALL` including stack
 arguments (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a
 synchronous whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT
 sections with demand paging, event

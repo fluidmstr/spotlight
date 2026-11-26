@@ -92,8 +92,9 @@ Done:
   demand paging, and a user VA allocator above 8 GiB.
 * **M5 (35%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, and preemptive round-robin driven by the LAPIC timer.
-* **M6 (85%)**: SYSCALL entry with stack arguments, 31 NT handlers covering
-  file, memory, event, object, time, process/system and thread queries; PE32+ loader with
+* **M6 (85%)**: SYSCALL entry with stack arguments, 36 NT handlers covering
+  file, memory, event, object, time, process/system and thread queries, plus
+  pseudo-handle opens, timer resolution and instruction-cache flush; PE32+ loader with
   IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers signaled and zero-timeout
   waits; blocking waits return `STATUS_NOT_IMPLEMENTED`.
 * **M10 (20%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32
@@ -109,7 +110,7 @@ Remaining:
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`, `test-sync`,
-`test-svc`, `test-svc3`, `test-preempt` and the host unit suites are green
+`test-svc`, `test-svc3`, `test-misc`, `test-preempt` and the host unit suites are green
 (2026-11-26).
 
 ---
