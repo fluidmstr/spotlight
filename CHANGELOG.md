@@ -59,6 +59,10 @@ foundation.
     `test-demand` touches three pages above 4 GiB (`demand-ok`, PTE `A/D` set).
   - ISR stubs now save/restore all 15 GPRs and drop the error code only for
     `err=1` vectors (`docs/07-subsystems/exceptions.md` §5.1).
+  - **Syscall table (19045).** 472 `Nt*` ordinals extracted from a local
+    `ntdll.dll` stub scan (`tools/ntdll-ssn`), generated into
+    `compat/ssdt/ntdll_19045.{csv,v,md}`. The only hole is `0x005a`, which this
+    build does not export; `validate --allow-gaps` records it explicitly.
   - VAD table: insert/find/remove over 64 ranges with host tests and a boot
     smoke test (`vad-ok`).
   - **ABI oracle**: a licensed Windows 10 22H2 image + public PDB symbols were
