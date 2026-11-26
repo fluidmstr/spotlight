@@ -8,12 +8,12 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ### Added
 
-- **29 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+- **30 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
   `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27,
   `NtFlushBuffersFile` 0x4b, `NtQueryDirectoryFile` 0x35.
   Memory: `NtAllocateVirtualMemory` 0x18, `NtFreeVirtualMemory` 0x1e,
   `NtProtectVirtualMemory` 0x50, `NtCreateSection` 0x4a,
-  `NtMapViewOfSection` 0x28, `NtUnmapViewOfSection` 0x2a. Events:
+  `NtQuerySection` 0x51, `NtMapViewOfSection` 0x28, `NtUnmapViewOfSection` 0x2a. Events:
   `NtCreateEvent` 0x48, `NtSetEvent` 0x0e, `NtResetEvent` 0x7a,
   `NtQueryEvent` 0x56. Timing and waits: `NtWaitForSingleObject` 0x04,
   `NtDelayExecution` 0x34, `NtQueryPerformanceCounter` 0x31,
@@ -28,8 +28,8 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   FAT32 read and in-place write, and a published VFS volume over a 64 KiB disk
   image. Writes go through to the cached volume; `NtFlushBuffersFile` flushes the
   whole image to the SATA disk (`test-flush` re-reads sector 34).
-- **Memory**: anonymous NT sections with demand paging; user VA allocator above
-  8 GiB.
+- **Memory**: anonymous, file-backed and `SEC_IMAGE` NT sections with demand
+  paging; user VA allocator above 8 GiB.
 - **Ring 3**: PE loader with IAT/TEB/PEB at CPL3; multi-argument `SYSCALL` entry
   including arguments passed on the stack.
 - **Scheduling**: preemptive round-robin.

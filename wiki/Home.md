@@ -17,17 +17,18 @@ boot services, builds identity page tables and enters `KiSystemStartup`. The
 kernel brings up COM1, GDT/TSS/IDT, exception handling, KPCR, hardware
 interrupts, a bugcheck path, ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, a
 calibrated LAPIC timer replacing the 8259/PIT, one IOAPIC line routed end-to-end
-and PCI bus enumeration. It maps anonymous NT sections with demand paging, runs
-a preemptive round-robin scheduler, and loads a PE32+ image with IAT/TEB/PEB into
-CPL3. Storage is a polling AHCI driver over FAT32 with in-place writes, exposed
+and PCI bus enumeration. It maps anonymous, file-backed and `SEC_IMAGE` NT
+sections with demand paging, runs a preemptive round-robin scheduler, and loads
+a PE32+ image with IAT/TEB/PEB into CPL3. Storage is a polling AHCI driver over FAT32 with in-place writes, exposed
 as a published VFS volume; `NtWriteFile` writes through to the cached volume and
 `NtFlushBuffersFile` synchronously flushes the whole 64 KiB image to the SATA
 disk. The kernel also has event objects, timed delays and an NTFS parser.
 
-**Recent kernel progress:** 29 NT syscalls (file, memory, event, timing and thread
+**Recent kernel progress:** 30 NT syscalls (file, memory, event, timing and thread
 information), a CPL3 PE image making a multi-argument `SYSCALL` including stack
 arguments (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a
-synchronous whole-image flush, anonymous NT sections with demand paging, event
+synchronous whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT
+sections with demand paging, event
 objects, `NtDelayExecution` and a user VA allocator above 8 GiB.
 `NtWaitForSingleObject` handles signaled and zero-timeout waits; blocking waits
 still return `STATUS_NOT_IMPLEMENTED`. There is no

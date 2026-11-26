@@ -88,11 +88,11 @@ Remaining:
 Done:
 
 * **M4 (55%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
-  page-fault handling, anonymous NT sections with demand paging, and a user VA
-  allocator above 8 GiB.
+  page-fault handling, anonymous, file-backed and `SEC_IMAGE` NT sections with
+  demand paging, and a user VA allocator above 8 GiB.
 * **M5 (35%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, and preemptive round-robin driven by the LAPIC timer.
-* **M6 (85%)**: SYSCALL entry with stack arguments, 29 NT handlers covering
+* **M6 (85%)**: SYSCALL entry with stack arguments, 30 NT handlers covering
   file, memory, event, time, process/system and thread queries; PE32+ loader with
   IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers signaled and zero-timeout
   waits; blocking waits return `STATUS_NOT_IMPLEMENTED`.
