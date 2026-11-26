@@ -109,7 +109,11 @@ foundation.
     `preempt-ok`). Priorities/quantum/idle are still fixed.
   - **PE32+ parser.** `kernel/image/pe.v` validates DOS/COFF/optional headers,
     walks sections, maps RVA→file offset and iterates DIR64 relocations; host
-    tests cover truncated/malformed images. Not yet wired into the loader.
+    tests cover truncated/malformed images.
+  - **PE user loader.** `kernel/loader/loader.v` maps sections with `U/S=1`,
+    zero-fills tails and applies DIR64 deltas. `test-pe-user` builds a 0x400-byte
+    PE32+, loads it at `0x140000000`, jumps to `0x140001000` in CPL3 and receives
+    `pe-exec-ok` from its `SYSCALL` marker. Imports/TEB/W^X are next.
   - **NTFS parser.** `kernel/fs/ntfs.v` (module `fs`) reads the VBR, FILE
     record, USA fixup, attributes and resident FILE_NAME; 32 host tests. NTFS
     is a compatibility backend, not the root.
