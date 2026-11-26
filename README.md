@@ -65,7 +65,8 @@ And the machine itself proves the rest:
 
 | Test | Command | Result |
 |---|---|---|
-| Boot regression | `v run mk/build.vsh -- test-boot` | 8/8 serial expectations |
+| Boot regression | `v run mk/build.vsh -- test-boot` | 11/11 serial expectations |
+| Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `timer-ok` |
 | Exception routing | `v run mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
 | Bugcheck path | `v run mk/build.vsh -- test-bugcheck` | `BUGCHECK 0x50000001` |
 | Host unit tests | `v run mk/build.vsh -- test` | 5/5 suites |

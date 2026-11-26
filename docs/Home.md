@@ -55,7 +55,7 @@ I [hal] pit_ticks=0x3
 I [serial] loopback self-test passed
 ```
 
-Self-tests: `test-boot` (10/10 lines), `test-exception` (`EXC 3`);
+Self-tests: `test-boot` (11/11 lines), `test-timer` (10 ticks), `test-exception` (`EXC 3`);
 `test-bugcheck` (`BUGCHECK 0x50000001`).
 
 ---

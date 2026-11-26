@@ -10,6 +10,7 @@
 ```powershell
 v run mk/build.vsh -- test          # host unit tests + ABI tests
 v run mk/build.vsh -- test-boot     # serial expectations
+v run mk/build.vsh -- test-timer    # 10 sustained timer interrupts
 v run mk/build.vsh -- test-exception
 v run mk/build.vsh -- test-bugcheck
 ```
@@ -18,6 +19,7 @@ v run mk/build.vsh -- test-bugcheck
 |---|---|
 | `test` | PE parser, page tables, ssdt-gen, symgen, Loader_block offsets |
 | `test-boot` | loader and kernel milestones on COM1 |
+| `test-timer` | 10 sustained PIT interrupts (`timer-ok`) |
 | `test-exception` | a deliberate `int3` reaches the IDT dispatcher (`EXC 3`) |
 | `test-bugcheck` | `ke.bugcheck()` prints `BUGCHECK 0x50000001` and halts |
 
@@ -38,6 +40,9 @@ I [boot] loader block accepted
 I [boot] image_base=0x
 I [ke] GDT, TSS and IDT loaded
 I [ke] KPCR installed at GS base
+I [hal] lapic_id=0x
+I [hal] PIC and PIT ready
+I [hal] pit_ticks=0x
 I [serial] loopback self-test passed
 ```
 
@@ -51,7 +56,7 @@ v run tools/vm/qemu.vsh -- run-efi --expect tests/boot/m2_serial.lines
 Output on success:
 
 ```
-boot test passed: 8 expectations matched
+boot test passed: 11 expectations matched
 ```
 
 On failure it prints every missing line and exits 1.
