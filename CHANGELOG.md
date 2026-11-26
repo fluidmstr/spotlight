@@ -102,6 +102,11 @@ foundation.
   - **RTC time source.** `kernel/hal/rtc.v` reads the CMOS RTC (BCD/12h/UIP,
     bounded retries) and fills `KUSER_SHARED_DATA` with the real boot time;
     the fixed 2026-01-01 value remains as a fallback.
+  - **Preemptive scheduler.** The LAPIC timer (vector 0x40, 100 Hz) calls a
+    `Tick_hook` after EOI; `ps_schedule` round-robins between threads via the
+    ready queues and `spot_swap_context`. `test-preempt` proves two volatile
+    counters advance without explicit switches (`preempt-a`, `preempt-b`,
+    `preempt-ok`). Priorities/quantum/idle are still fixed.
   - **PE32+ parser.** `kernel/image/pe.v` validates DOS/COFF/optional headers,
     walks sections, maps RVA→file offset and iterates DIR64 relocations; host
     tests cover truncated/malformed images. Not yet wired into the loader.
