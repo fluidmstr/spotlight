@@ -17,7 +17,7 @@
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Overall   █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   ~13%  (to L3)
+Overall   ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~15%  (to L3)
 ```
 
 </div>
@@ -64,6 +64,9 @@ I [hal] lapic_id=0x0
 I [hal] ioapic_version=0x170020
 I [hal] PIC and PIT ready; enabling interrupts
 I [hal] pit_ticks=0x3
+I [hal] PIC and PIT masked; LAPIC timer is the time source
+I [hal] lapic_timer-ok
+I [hal] lapic_timer_ticks=0xa
 I [serial] loopback self-test passed
 ```
 
@@ -71,7 +74,8 @@ And the machine itself proves the rest:
 
 | Test | Command | Result |
 |---|---|---|
-| Boot regression | `v run mk/build.vsh -- test-boot` | 16/16 serial expectations |
+| Boot regression | `v run mk/build.vsh -- test-boot` | 19/19 serial expectations |
+| LAPIC timer | `v run mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `timer-ok` |
 | Exception routing | `v run mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
 | Bugcheck path | `v run mk/build.vsh -- test-bugcheck` | `BUGCHECK 0x50000001` |
@@ -80,8 +84,9 @@ And the machine itself proves the rest:
 What this means: our own UEFI loader reads a PE32+ kernel, allocates pages, applies
 relocations, exits boot services, builds its own page tables, switches CR3, installs
 a kernel stack and enters `KiSystemStartup`. The kernel brings up COM1, GDT, TSS,
-IDT, exception handling, the per-CPU GS base, hardware interrupts, and the first
-M3 pieces — ACPI/MADT, LAPIC/IOAPIC and IRQL.
+IDT, exception handling, the per-CPU GS base, hardware interrupts, the first
+M3 pieces — ACPI/MADT, LAPIC/IOAPIC and IRQL — and finally hands timekeeping to
+the LAPIC timer while retiring the 8259 and PIT.
 
 ---
 
@@ -91,7 +96,7 @@ M3 pieces — ACPI/MADT, LAPIC/IOAPIC and IRQL.
 M0  ████████████████████ 100%   Bare-metal V: UEFI app boots in QEMU/OVMF
 M1  ████████████████████ 100%   Loader: PE32+, ExitBootServices, own CR3, handoff
 M2  ████████████████████ 100%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
-M3  ████████░░░░░░░░░░░░  40%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, HPET
+M3  ███████████░░░░░░░░░  55%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, LAPIC timer
 M4  ░░░░░░░░░░░░░░░░░░░░   0%   Memory manager: PFN, paging, sections
 M5  ░░░░░░░░░░░░░░░░░░░░   0%   Objects, processes, threads
 M6  ░░░░░░░░░░░░░░░░░░░░   0%   System calls, first ring-3 process
@@ -110,7 +115,7 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | **M0** | UEFI app on V, zero libc | ✅ closed | banner + memory map in QEMU/OVMF |
 | **M1** | loader, PE32+, ExitBootServices, CR3 | ✅ closed | `EXIT / PGON / JUMP` on debugcon |
 | **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | ✅ closed | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
-| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, HPET | 🟡 40% | `lapic_base=0xfee00000`, `ioapic_version=0x170020`, `irql 0→2→0` |
+| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, LAPIC timer | 🟡 55% | `lapic_base=0xfee00000`, `lapic_timer-ok`, `lapic_timer_ticks=0xa` |
 | M4–M12 | Mm, Ob/Ps, syscalls, Io, Cm, Se, NTFS, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | distributable OS image | ⬜ | — |
@@ -187,6 +192,9 @@ I [hal] lapic_id=0x0
 I [hal] ioapic_version=0x170020
 I [hal] PIC and PIT ready; enabling interrupts
 I [hal] pit_ticks=0x3
+I [hal] PIC and PIT masked; LAPIC timer is the time source
+I [hal] lapic_timer-ok
+I [hal] lapic_timer_ticks=0xa
 I [serial] loopback self-test passed
 ```
 

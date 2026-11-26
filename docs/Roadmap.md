@@ -11,7 +11,7 @@
 M0  ████████████████████ 100%   ✅
 M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
-M3  ████████░░░░░░░░░░░░  40%   🟡
+M3  ███████████░░░░░░░░░  55%   🟡
 M4  ░░░░░░░░░░░░░░░░░░░░   0%
 M5  ░░░░░░░░░░░░░░░░░░░░   0%
 M6  ░░░░░░░░░░░░░░░░░░░░   0%
@@ -24,7 +24,7 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~13% to L3
+Overall  ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~15% to L3
 ```
 
 | Stage | Scope | State |
@@ -32,7 +32,7 @@ Overall  █████░░░░░░░░░░░░░░░░░░�
 | **M0** | UEFI app in V, no libc, no runtime | ✅ |
 | **M1** | loader, PE32+, `ExitBootServices`, own CR3, handoff | ✅ |
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
-| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, HPET, PCI, SMP | 🟡 40% |
+| **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, LAPIC timer, PCI, SMP | 🟡 55% |
 | **M4** | Mm: PFN database, paging, sections, pools | ⬜ |
 | **M5** | Ob/Ps: objects, processes, threads, APC | ⬜ |
 | **M6** | syscalls, first ring-3 process | ⬜ |
@@ -68,10 +68,12 @@ Done:
   QEMU stores IRQL in the low nibble (`CR8 = 2`, not `0x20`).
 * **Spinlocks**: `Kspin_lock` with `lock cmpxchg`, IRQL-paired acquire/release.
 * **HPET**: capabilities, counter, frequency, tick/us conversions (driver only).
+* **LAPIC timer takeover**: periodic vector `0x40`, APIC EOI routing, 8259 and PIT
+  masked; `lapic_timer-ok` and `lapic_timer_ticks=0xa` observed.
 
 Remaining:
 
-* Switch the timer from PIT to LAPIC/HPET; route IOAPIC lines; mask 8259 fully.
+* Route IOAPIC lines for external devices; keep the 8259 masked for good.
 * PCI enumeration (ECAM + legacy), resource discovery.
 * SMP: per-CPU KPCR, INIT-SIPI-SIPI, AP bring-up.
 * Adopt IRQL/spinlocks in klog and the scheduler paths.

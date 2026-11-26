@@ -5,14 +5,15 @@
 ---
 
 ```
-Overall   █████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~13% to L3
+Overall   ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~15% to L3
 ```
 
 **Current state:** M0 and M1 are closed, M2 is in progress. Our own UEFI loader
 boots a PE32+ kernel written in V, exits boot services, builds identity page
 tables and enters `KiSystemStartup`. The kernel brings up COM1, GDT/TSS/IDT,
 exception handling, KPCR, hardware interrupts (PIC/PIT), a bugcheck path, and the
-first M3 pieces: ACPI/MADT, LAPIC/IOAPIC, IRQL and spinlocks.
+first M3 pieces: ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, and the LAPIC timer
+replacing the 8259/PIT.
 
 ---
 
@@ -59,10 +60,13 @@ I [hal] lapic_id=0x0
 I [hal] ioapic_version=0x170020
 I [hal] PIC and PIT ready; enabling interrupts
 I [hal] pit_ticks=0x3
+I [hal] PIC and PIT masked; LAPIC timer is the time source
+I [hal] lapic_timer-ok
+I [hal] lapic_timer_ticks=0xa
 I [serial] loopback self-test passed
 ```
 
-Self-tests: `test-boot` (16/16 lines), `test-timer` (10 ticks), `test-exception` (`EXC 3`);
+Self-tests: `test-boot` (19/19 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`);
 `test-bugcheck` (`BUGCHECK 0x50000001`).
 
 ---

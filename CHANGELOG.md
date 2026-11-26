@@ -36,6 +36,8 @@ foundation.
   - Spinlocks with `lock cmpxchg` and IRQL pairing.
   - HPET driver (capabilities, counter, frequency, conversions) — not yet wired
     as the active timer.
+  - LAPIC timer takeover: periodic vector `0x40`, APIC EOI routing, 8259 and PIT
+    masked; `lapic_timer-ok` / `lapic_timer_ticks=0xa` observed in QEMU.
 - `Loader_block` ABI specification and offset tests (`sizeof == 0x70`).
 - Tooling: `ssdt-gen`, `symgen`, `pdb-abi`, version stamping, QEMU harness with
   serial expectations.
@@ -45,7 +47,8 @@ foundation.
 
 | Check | Result |
 |---|---|
-| `mk/build.vsh -- test-boot` | 16/16 serial expectations |
+| `mk/build.vsh -- test-boot` | 19/19 serial expectations |
+| `mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | `mk/build.vsh -- test-timer` | 10 sustained interrupts (`timer-ok`) |
 | `mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
 | `mk/build.vsh -- test-bugcheck` | `BUGCHECK 0x50000001` |
