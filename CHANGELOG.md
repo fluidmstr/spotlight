@@ -51,6 +51,14 @@ foundation.
     readback (`cr3=0x100000`, `paging-on`).
   - Page-fault handler: logs CR2 and the error code, then bugchecks; `test-pf`
     faults at `0x100000000` and observes `PF cr2/err`.
+  - **Demand paging**: anonymous section objects, 4 KiB map/unmap on the kernel
+    PML4, and a `#PF` path that installs the backing page and retries. The first
+    attempt exposed two real bugs: the ISR stub did not preserve the
+    general-purpose registers, and `iretq` was not dropping the CPU-pushed error
+    code, so a repaired store retried with a clobbered `rax`. Both are fixed;
+    `test-demand` touches three pages above 4 GiB (`demand-ok`, PTE `A/D` set).
+  - ISR stubs now save/restore all 15 GPRs and drop the error code only for
+    `err=1` vectors (`docs/07-subsystems/exceptions.md` §5.1).
   - VAD table: insert/find/remove over 64 ranges with host tests and a boot
     smoke test (`vad-ok`).
   - **ABI oracle**: a licensed Windows 10 22H2 image + public PDB symbols were

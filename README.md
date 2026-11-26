@@ -9,20 +9,20 @@
 
 <br>
 
-![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-30%25%20·%20M4-2ea043?style=flat-square)
+![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-32%25%20·%20M4-2ea043?style=flat-square)
 ![Spotlight X](https://img.shields.io/badge/Spotlight%20X-5%25-lightgrey?style=flat-square)
 ![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-5%25-lightgrey?style=flat-square)
-![Spotlight](https://img.shields.io/badge/Spotlight%20project-18%25-orange?style=flat-square)
+![Spotlight](https://img.shields.io/badge/Spotlight%20project-19%25-orange?style=flat-square)
 ![ABI](https://img.shields.io/badge/ABI-Windows%2010%20x64%2019045-0078d4?style=flat-square)
 ![Language](https://img.shields.io/badge/language-V-4f7396?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--2.0--or--later-blue?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Spotlight NT     ██████░░░░░░░░░░░░░░  30%   kernel: M0–M2 closed, M3 75%, M4 30%
+Spotlight NT     ██████░░░░░░░░░░░░░░  32%   kernel: M0–M2 closed, M3 75%, M4 40%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro — skeleton + specs
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   5%   installer environment — docs + build skeleton
-Spotlight        ███░░░░░░░░░░░░░░░░░  18%   the project as a product (target: L3)
+Spotlight        ████░░░░░░░░░░░░░░░░  19%   the project as a product (target: L3)
 ```
 
 </div>
@@ -53,10 +53,10 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 
 | Scale | What it measures | Progress | Works today | Next |
 |---|---|---|---|---|
-| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **30%** (M0–M2 ✅, M3 75%, M4 30%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD | M4: sections, demand paging, higher-half |
+| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **32%** (M0–M2 ✅, M3 75%, M4 40%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, demand-paged sections | M4: working sets, COW, higher-half |
 | **Spotlight X** | userland, Win32 layer, GUI, distro | **5%** (skeleton + specs) | repository layout, architecture and app-compatibility plans | ntdll and PE loader behind syscalls (needs L1) |
 | **Spotlight PE** | installer / recovery environment | **5%** (docs + build script) | repo, subsystem docs, `mk/build.vsh` skeleton | console/explorer on the kernel, installer flow |
-| **Spotlight** | the project as a product | **18%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
+| **Spotlight** | the project as a product | **19%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
 
 > The kernel is ahead of the OS. That is expected: userland and the installer are
 > blocked on syscalls, which are blocked on the memory manager and process objects.
@@ -100,6 +100,8 @@ I [mm] cr3=0x100000
 I [mm] alloc-free-ok
 I [mm] pool-ok
 I [mm] vad-ok
+I [mm] mappings=0x1
+I [mm] demand-ok
 I [serial] loopback self-test passed
 ```
 
@@ -107,8 +109,9 @@ And the machine itself proves the rest:
 
 | Test | Command | Result |
 |---|---|---|
-| Boot regression | `v run mk/build.vsh -- test-boot` | 31/31 serial expectations |
+| Boot regression | `v run mk/build.vsh -- test-boot` | 32/32 serial expectations |
 | Page fault | `v run mk/build.vsh -- test-pf` | `PF cr2=0x100000000`, bugcheck `0x50000020` |
+| Demand paging | `v run mk/build.vsh -- test-demand` | three faults above 4 GiB, `demand-ok` |
 | LAPIC timer | `v run mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `pit_timer-ok` |
 | Exception routing | `v run mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
@@ -131,7 +134,7 @@ M0  ████████████████████ 100%   Bare-met
 M1  ████████████████████ 100%   Loader: PE32+, ExitBootServices, own CR3, handoff
 M2  ████████████████████ 100%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
 M3  ███████████████░░░░░  75%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI
-M4  ██████░░░░░░░░░░░░░  30%   Memory manager: PFN, paging, sections
+M4  ████████░░░░░░░░░░░░  40%   Memory manager: PFN, paging, sections, demand
 M5  ░░░░░░░░░░░░░░░░░░░░   0%   Objects, processes, threads
 M6  ░░░░░░░░░░░░░░░░░░░░   0%   System calls, first ring-3 process
 M7  ░░░░░░░░░░░░░░░░░░░░   0%   I/O manager, PnP, power  ← gate G2
@@ -150,7 +153,7 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | **M1** | loader, PE32+, ExitBootServices, CR3 | ✅ closed | `EXIT / PGON / JUMP` on debugcon |
 | **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | ✅ closed | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI | 🟡 75% | `lapic_bus_hz≈998MHz`, `ioapic_irq-ok`, `pci devices=6` |
-| **M4** | Mm: PFN page database, kernel pool, page tables, VAD | 🟡 30% | `paging-on`, `cr3=0x100000`, `PF cr2=0x100000000`, `vad-ok` |
+| **M4** | Mm: PFN page database, kernel pool, page tables, VAD, sections | 🟡 40% | `paging-on`, `cr3=0x100000`, `vad-ok`, `demand-ok` |
 | M5–M12 | Ob/Ps, syscalls, Io, Cm, Se, NTFS, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | distributable OS image | ⬜ | — |
@@ -170,7 +173,7 @@ processes and system calls.
 | **Next** | ntdll skeleton and PE loader behind `Nt*` stubs | console over COM1/framebuffer once ring 3 exists |
 | **Progress** | 5% | 5% |
 
-That is why the overall project sits at 18% while the kernel is at 30%: the OS
+That is why the overall project sits at 19% while the kernel is at 32%: the OS
 needs the kernel to finish first, not the other way around.
 
 ---
@@ -260,6 +263,8 @@ I [mm] cr3=0x100000
 I [mm] alloc-free-ok
 I [mm] pool-ok
 I [mm] vad-ok
+I [mm] mappings=0x1
+I [mm] demand-ok
 I [serial] loopback self-test passed
 ```
 
