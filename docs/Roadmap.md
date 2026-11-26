@@ -92,8 +92,8 @@ Done:
   demand paging, and a user VA allocator above 8 GiB.
 * **M5 (35%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, and preemptive round-robin driven by the LAPIC timer.
-* **M6 (85%)**: SYSCALL entry with stack arguments, 30 NT handlers covering
-  file, memory, event, time, process/system and thread queries; PE32+ loader with
+* **M6 (85%)**: SYSCALL entry with stack arguments, 31 NT handlers covering
+  file, memory, event, object, time, process/system and thread queries; PE32+ loader with
   IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers signaled and zero-timeout
   waits; blocking waits return `STATUS_NOT_IMPLEMENTED`.
 * **M10 (20%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32

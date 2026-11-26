@@ -53,7 +53,7 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 
 | Scale | What it measures | Progress | Works today | Next |
 |---|---|---|---|---|
-| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **57%** (M0–M2 ✅, M3 75%, M4 55%, M5 35%, M6 85%, M10 20%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 30 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, PE32+ loader with IAT/TEB/PEB/process CR3, polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, event objects and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle; M6: blocking waits and broader dispatch; M10: ext4, partial/async flush, write-back cache |
+| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **57%** (M0–M2 ✅, M3 75%, M4 55%, M5 35%, M6 85%, M10 20%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 31 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, PE32+ loader with IAT/TEB/PEB/process CR3, polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, event objects and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle; M6: blocking waits and broader dispatch; M10: ext4, partial/async flush, write-back cache |
 | **Spotlight X** | userland, Win32 layer, GUI, distro | **5%** (skeleton + specs) | repository layout, architecture and app-compatibility plans | ntdll and PE loader behind syscalls (needs L1) |
 | **Spotlight PE** | installer / recovery environment | **5%** (docs + build script) | repo, subsystem docs, `mk/build.vsh` skeleton | console/explorer on the kernel, installer flow |
 | **Spotlight** | the project as a product | **33%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
@@ -132,13 +132,14 @@ And the machine itself proves the rest:
 
 ### Recent kernel progress (2026-11-26)
 
-* **30 NT syscalls** dispatched: file I/O (`NtCreateFile`, `NtReadFile`,
+* **31 NT syscalls** dispatched: file I/O (`NtCreateFile`, `NtReadFile`,
   `NtWriteFile`, `NtQueryInformationFile`, `NtSetInformationFile`,
   `NtFlushBuffersFile`, `NtQueryVolumeInformationFile`,
   `NtQueryDirectoryFile`), memory
   (`NtAllocateVirtualMemory`, `NtFreeVirtualMemory`, `NtProtectVirtualMemory`,
   `NtCreateSection`, `NtQuerySection`, `NtMapViewOfSection`, `NtUnmapViewOfSection`), events
-  (`NtCreateEvent`, `NtSetEvent`, `NtResetEvent`, `NtQueryEvent`), thread
+  (`NtCreateEvent`, `NtSetEvent`, `NtResetEvent`, `NtQueryEvent`), object
+  information (`NtQueryObject`), thread
   information (`NtQueryInformationThread`, `NtSetInformationThread`) and
   timing/synchronization (`NtDelayExecution`, `NtQueryPerformanceCounter`,
   `NtWaitForSingleObject`). Signaled and zero-timeout waits work; blocking
@@ -177,7 +178,7 @@ M2  ████████████████████ 100%   Kernel b
 M3  ███████████████░░░░░  75%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI
 M4  ███████████░░░░░░░░░  55%   Memory manager: PFN, paging, VAD, NT sections, demand
 M5  ███████░░░░░░░░░░░░░  35%   Processes/threads: preemptive round-robin, queues, CR3
-M6  █████████████████░░░  85%   Syscalls: 30 NT handlers, multi-arg entry, events
+M6  █████████████████░░░  85%   Syscalls: 31 NT handlers, multi-arg entry, events
 M7  ░░░░░░░░░░░░░░░░░░░░   0%   I/O manager, PnP, power  ← gate G2
 M8  ░░░░░░░░░░░░░░░░░░░░   0%   Registry, hives, transactions
 M9  ░░░░░░░░░░░░░░░░░░░░   0%   Security: tokens, ACL, integrity
@@ -196,7 +197,7 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI | 🟡 75% | `lapic_bus_hz≈998MHz`, `ioapic_irq-ok`, `pci devices=6` |
 | **M4** | Mm: PFN page database, kernel pool, page tables, VAD, sections | 🟡 55% | `paging-on`, `vad-ok`, `demand-ok`, anonymous, file-backed and `SEC_IMAGE` NT sections (`test-section`, `test-section-file`, `test-section-image`) |
 | **M5** | Ob/Ps: objects, processes, threads, scheduler | 🟡 35% | `preempt-ok`, `sched-tid=0x1`, `cr3-b`/`cr3-a`, `thread-a-resumed` |
-| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 85% | 30 NT handlers; `test-svc3` multi-argument SYSCALL incl. stack args; `test-exe-file` |
+| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 85% | 31 NT handlers; `test-svc3` multi-argument SYSCALL incl. stack args; `test-exe-file` |
 | **M10** | Storage: VFS, FAT32/ext4/NTFS/btrfs, Cc | 🟡 20% | `test-disk`/`test-file`/`test-flush`: AHCI + FAT32 read/write, VFS volume, 64 KiB image, whole-image flush re-read; NTFS parser |
 | M7–M9, M11–M12 | Io, Cm, Se, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
