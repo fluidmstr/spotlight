@@ -66,11 +66,15 @@ foundation.
     implemented in user mode, hence no ntdll stub. 15 slots share stubs
     (12 return `STATUS_NOT_IMPLEMENTED`, 3 return success). Artifacts:
     `compat/ssdt/ntoskrnl_19045.*` and `verify_19045.md`.
-  - **M6 (started) — syscall entry.** `EFER.SCE`, `STAR/LSTAR/FMASK` with
-    readback, `spot_syscall_entry` (ring 0, `IRETQ`) and an SSN limit check:
-    valid numbers return `STATUS_NOT_IMPLEMENTED`, out-of-range numbers return
-    `STATUS_INVALID_SYSTEM_SERVICE`. `test-syscall` drives `SYSCALL` from ring 0
-    and observes `syscall-ok`; ring 3, `SWAPGS` and the kernel stack are pending.
+  - **M6 (started) — syscall entry and ring 3.** `EFER.SCE`, `STAR/LSTAR/FMASK`
+    with readback, `swapgs`, a 16 KiB kernel syscall stack, `SYSRETQ` return and
+    an SSN limit check: valid numbers return `STATUS_NOT_IMPLEMENTED`,
+    out-of-range numbers return `STATUS_INVALID_SYSTEM_SERVICE`. `test-syscall`
+    covers the policy; `test-ring3` enters CPL3 with a 29-byte static stub, does
+    `SYSCALL` → kernel → `SYSRETQ` back to user, then a second `SYSCALL` with a
+    marker (`syscall-user-ok`), proving the round-trip. The GDT was migrated to
+    the 19045 selectors after reading `IA32_STAR` in `HalInitSystem`
+    (kernel `0x10`, user `0x33`/`0x2B`, TSS `0x40`), and `FMASK` is `0x4700`.
   - VAD table: insert/find/remove over 64 ranges with host tests and a boot
     smoke test (`vad-ok`).
   - **ABI oracle**: a licensed Windows 10 22H2 image + public PDB symbols were
