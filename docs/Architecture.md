@@ -48,7 +48,7 @@ Everything after step 9 uses only port `0xE9` until the kernel's COM1 driver run
 | **Se** | tokens, SIDs, ACL, integrity | ⬜ |
 | **Lpc** | ALPC ports | ⬜ |
 | **Cc** | file cache | ⬜ |
-| **Syscall** | LSTAR/KiSystemCall64, SSDT | 🟡 28 handlers, multi-arg entry |
+| **Syscall** | LSTAR/KiSystemCall64, SSDT | 🟡 29 handlers, multi-arg entry |
 
 ---
 

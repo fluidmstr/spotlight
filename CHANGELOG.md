@@ -8,9 +8,9 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ### Added
 
-- **28 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+- **29 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
   `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27,
-  `NtFlushBuffersFile` 0x4b.
+  `NtFlushBuffersFile` 0x4b, `NtQueryDirectoryFile` 0x35.
   Memory: `NtAllocateVirtualMemory` 0x18, `NtFreeVirtualMemory` 0x1e,
   `NtProtectVirtualMemory` 0x50, `NtCreateSection` 0x4a,
   `NtMapViewOfSection` 0x28, `NtUnmapViewOfSection` 0x2a. Events:
