@@ -2,3 +2,9 @@
 *.log
 .DS_Store
 Thumbs.db
+ref/
+*.iso
+*.vhd
+*.vhdx
+*.hive
+*.regf

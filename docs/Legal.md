@@ -94,6 +94,16 @@ New dependencies require a licence check and a row in `third_party/README.md`.
 
 ---
 
+## Reference installations
+
+A licensed Windows installation may be used as a local **oracle** for ABI
+verification, syscall numbers, registry/NTFS fixtures and behavioural probes.
+It never enters the repository: only facts (offsets, ordinals, error codes) in our
+own words. Visual assets are recreated, not extracted. The full policy and
+workflow are in [Reference-Windows.md](Reference-Windows.md).
+
+---
+
 ## Next
 
 * [Contributing](Contributing.md)

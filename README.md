@@ -282,6 +282,7 @@ Step-by-step: [`docs/Installation.md`](docs/Installation.md).
 | [Troubleshooting](docs/Troubleshooting.md) | known failures and fixes |
 | [Contributing](docs/Contributing.md) | rules, scopes, good first tasks |
 | [Legal](docs/Legal.md) | licensing, clean room, symbols |
+| [Reference Windows](docs/Reference-Windows.md) | how a licensed Windows is used as an ABI oracle |
 | [FAQ](docs/FAQ.md) | short answers to hard questions |
 | [Changelog](CHANGELOG.md) | what shipped, with evidence |
 
