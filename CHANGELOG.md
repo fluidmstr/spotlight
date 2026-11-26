@@ -43,6 +43,10 @@ foundation.
   - IOAPIC routed end-to-end: ISA IRQ0 → GSI 2 → vector `0x30`, 5 ticks with the
     8259 masked.
   - PCI bus-0 enumeration via mechanism #1: 6 functions, host bridge `8086:29c0`.
+- **M4 (started) — memory manager.** PFN bitmap built from the loader memory map
+  (conventional pages only, first 1 MiB reserved), allocation bitmap so reserved
+  pages cannot be freed, contiguous allocator, and a first-fit kernel pool.
+  QEMU: `free_pages=0x7ac8f` (~1.9 GiB), alloc/free round-trip and pool reuse pass.
 - `Loader_block` ABI specification and offset tests (`sizeof == 0x70`).
 - Tooling: `ssdt-gen`, `symgen`, `pdb-abi`, version stamping, QEMU harness with
   serial expectations.
@@ -52,7 +56,7 @@ foundation.
 
 | Check | Result |
 |---|---|
-| `mk/build.vsh -- test-boot` | 25/25 serial expectations |
+| `mk/build.vsh -- test-boot` | 28/28 serial expectations |
 | `mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | `mk/build.vsh -- test-timer` | 10 sustained interrupts (`timer-ok`) |
 | `mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
