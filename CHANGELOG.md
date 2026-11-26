@@ -110,6 +110,12 @@ foundation.
   - **Licence policy.** ADR-0009 and `docs/11-legal.md`: kernel-facing layers
     (PE/DLL, registry, GDI, Win32 ABI) stay original; Wine (LGPL-2.1+) may be
     reused only in isolated userland with notices.
+  - **Product decisions.** `X:\` is the native root with `C:\` as a per-process
+    Win32 alias; the VFS targets ext4 (root), FAT32 (ESP), NTFS (compat) and
+    btrfs, not NTFS-only (ADR-0010). `spotinit` falls back to `spotterm` when the
+    desktop is absent (ADR-0012). Graphics uses own kernel drivers + a DRM-like
+    UAPI for Mesa RADV/ANV/NVK and DXVK/D8VK/VKD3D; WDDM is not the path
+    (ADR-0011).
   - VAD table: insert/find/remove over 64 ranges with host tests and a boot
     smoke test (`vad-ok`).
   - **ABI oracle**: a licensed Windows 10 22H2 image + public PDB symbols were

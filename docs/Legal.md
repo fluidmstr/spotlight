@@ -102,8 +102,12 @@ Microsoft logos or trade dress.
 | LLVM/Clang/lld | Apache-2.0 with LLVM exceptions | toolchain |
 | QEMU | GPL-2.0 | development only, not shipped |
 | OVMF/EDK2 | BSD-2-Clause | test firmware only |
-| Wine | LGPL-2.1+ | userland layer (Track B), planned |
+| Wine | LGPL-2.1+ | reference; isolated userland reuse only (ADR-0009) |
 | ReactOS | GPL-2.0+/LGPL-2.1+ | reference / optional reuse, case by case |
+| Mesa (RADV/ANV/NVK) | MIT | userland Vulkan ICD, upstream |
+| DXVK / D8VK | zlib | userland D3D translation |
+| VKD3D-Proton | LGPL-2.1+ | isolated userland D3D12 translation |
+| Linux ext4/btrfs code (if reused) | GPL-2.0 | optional backend reference; combined work under GPLv2, provenance logged |
 | FreeType | FTL/GPLv2 | fonts in the GUI, planned |
 
 New dependencies require a licence check and a row in `third_party/README.md`.

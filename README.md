@@ -182,6 +182,26 @@ processes and system calls.
 | **Next** | ntdll skeleton and PE loader behind `Nt*` stubs | console over COM1/framebuffer once ring 3 exists |
 | **Progress** | 5% | 5% |
 
+### Not a Windows clone
+
+Spotlight X keeps Windows binary compatibility but not Windows' internal
+choices:
+
+* **`X:\` is the native root.** Win32 processes see `C:\` as a per-process bind
+  alias of `X:\`, so `.exe` installers keep working without a separate volume.
+* **Multi-filesystem VFS.** ext4 is the default root, FAT32 is the ESP, NTFS is
+  a read-only (later rw) compatibility backend, btrfs comes after VFS
+  stabilisation. NTFS is one backend, not the centre of the OS.
+* **Terminal fallback.** `spotinit` starts the desktop session; if it is absent
+  or crashes, `spotterm` starts on the console (framebuffer or COM1). Recovery
+  never leaves a black screen.
+* **Graphics without WDDM.** Own kernel GPU drivers + a DRM-like UAPI for
+  upstream Mesa (RADV/ANV/NVK, MIT) and DXVK/D8VK (zlib) / VKD3D-Proton
+  (LGPL-2.1+, isolated). Windows WDDM drivers are not the path: they are
+  closed, version-locked and a larger subsystem than the current kernel.
+* Details: ADR-0010 (namespace/filesystems), ADR-0011 (graphics), ADR-0012
+  (session fallback) in `spotlight-nt/docs/adr/`.
+
 That is why the overall project sits at 25% while the kernel is at 41%: the OS
 needs the kernel to finish first, not the other way around.
 
