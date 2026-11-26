@@ -192,6 +192,7 @@ Step-by-step: [`docs/Installation.md`](docs/Installation.md).
 | [Contributing](docs/Contributing.md) | rules, scopes, good first tasks |
 | [Legal](docs/Legal.md) | licensing, clean room, symbols |
 | [FAQ](docs/FAQ.md) | short answers to hard questions |
+| [Changelog](CHANGELOG.md) | what shipped, with evidence |
 
 ---
 
