@@ -24,14 +24,15 @@ as a published VFS volume; `NtWriteFile` writes through to the cached volume and
 `NtFlushBuffersFile` synchronously flushes the whole 64 KiB image to the SATA
 disk. The kernel also has event objects, timed delays and an NTFS parser.
 
-**Recent kernel progress:** 38 NT syscalls (file and path-based attribute queries, memory, event, object, timing and thread
+**Recent kernel progress:** 41 NT syscalls (file and path-based attribute queries, memory, event and mutant objects, timing and thread
 information, current-process/thread handle opens, timer resolution and
 instruction-cache flush), a CPL3 PE image making a multi-argument `SYSCALL` including stack
 arguments (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a
 synchronous whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT
 sections with demand paging, event
 objects, `NtDelayExecution` and a user VA allocator above 8 GiB.
-`NtWaitForSingleObject` handles signaled and zero-timeout waits; blocking waits
+`NtWaitForSingleObject` handles signaled and zero-timeout waits and acquires an
+unowned mutant or one owned by the current thread; blocking waits
 still return `STATUS_NOT_IMPLEMENTED`. There is no
 userland, installer or GUI yet, and no real Windows `.exe`.
 
