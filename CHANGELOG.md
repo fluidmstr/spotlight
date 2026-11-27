@@ -77,8 +77,8 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
   - **Process/thread:** `NtTerminateProcess` 0x2c and `NtTerminateThread` 0x53
     park the target after logging; `NtTestAlert` 0x1c2, `NtAlertThread` 0x6f and
     `NtAlertThreadByThreadId` 0x70 manage alert state. `NtQueueApcThread` 0x45
-    remains registered but returns `STATUS_NOT_IMPLEMENTED` — there is no APC
-    delivery.
+    was registered but returned `STATUS_NOT_IMPLEMENTED` at this pass; user APC
+    delivery was added in the entry above.
   - **Object namespace:** `NtCreateDirectoryObject` 0xa7,
     `NtOpenDirectoryObject` 0x58, `NtQueryDirectoryObject` 0x144,
     `NtCreateSymbolicLinkObject` 0xc1, `NtOpenSymbolicLinkObject` 0x12e,
@@ -176,7 +176,8 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
   `NtWaitForSingleObject` covers signaled, zero-timeout and finite timed waits,
   acquires an unowned mutant or one owned by the current thread, decrements a
   positive semaphore count and fires on timer expiry; blocking scheduler waits
-  return `STATUS_NOT_IMPLEMENTED`, and there is no APC delivery.
+  return `STATUS_NOT_IMPLEMENTED`. APC delivery was not implemented at this pass
+  (added later; see the top entry).
 - **Info-class coverage.** `NtQueryInformationFile` accepts file classes 4–9, 14,
   16, 17, 21, 22, 34, 35 and 39; `NtQueryInformationProcess` accepts 0, 2, 3, 4,
   5, 7, 12, 18, 20–22, 24–34, 36 and 43; `NtQuerySystemInformation` accepts 0, 1,
