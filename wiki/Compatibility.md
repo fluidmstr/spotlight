@@ -17,8 +17,9 @@
 
 There is no compatibility layer hiding in the repository. The kernel prints its
 boot log on COM1, exercises 95 NT syscalls (including waits, the object namespace,
-I/O completion ports, named objects and an in-memory registry), runs a CPL3
-PE32+ test image and then halts. The compatibility layers, userland and
+I/O completion ports, named objects, an in-memory registry and thread
+exit/wait/query), runs a CPL3 PE32+ test image and then halts. File handles expose
+DOS creation/write timestamps as FILETIMEs. The compatibility layers, userland and
 application corpus are still ahead.
 
 ---

@@ -43,7 +43,7 @@ Everything after step 9 uses only port `0xE9` until the kernel's COM1 driver run
 | **HAL** | CPU, PIC/PIT → APIC/HPET, PCI, ACPI, SMP | 🟡 COM1, ACPI/APIC, PCI, HPET |
 | **Mm** | PFN database, paging, sections, pools, MDL | 🟡 PFN, pool, paging, VAD, sections |
 | **Ob** | object manager, handles, namespaces | 🟡 event/mutant/semaphore/timer objects, named opens, duplicate; directory and symbolic-link objects, named sections |
-| **Ps** | processes, threads, ETHREAD/EPROCESS | 🟡 processes, threads, CR3, scheduler, thread creation, termination/alert |
+| **Ps** | processes, threads, ETHREAD/EPROCESS | 🟡 processes, threads, CR3, scheduler, thread creation, exit/dequeue, post-exit wait and query, termination/alert |
 | **Io** | IRPs, device stacks, PnP, power | ⬜ IRPs; I/O completion objects (queue/set/remove/query) only |
 | **Cm** | registry, hives | ⬜ hives; in-memory key/value store only |
 | **Se** | tokens, SIDs, ACL, integrity | ⬜ token queries only |

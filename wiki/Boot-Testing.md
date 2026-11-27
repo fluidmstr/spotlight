@@ -14,12 +14,15 @@ v run mk/build.vsh -- test-lapic    # LAPIC timer takeover
 v run mk/build.vsh -- test-timer    # 10 sustained timer interrupts
 v run mk/build.vsh -- test-exception
 v run mk/build.vsh -- test-bugcheck
-v run mk/build.vsh -- test-file      # rename and delete-on-close
+v run mk/build.vsh -- test-file      # rename, delete-on-close, DOS timestamps
 v run mk/build.vsh -- test-event     # named event create/open/duplicate
 v run mk/build.vsh -- test-sync      # single- and multi-object waits
 v run mk/build.vsh -- test-namespace # directory and symbolic-link objects
 v run mk/build.vsh -- test-iocp      # I/O completion queue
 v run mk/build.vsh -- test-exit      # thread/process exit
+v run mk/build.vsh -- test-apc       # user APC delivery and resume
+v run mk/build.vsh -- test-thread-create # NtCreateThreadEx ring-3 start
+v run mk/build.vsh -- test-thread-exit   # exit, dequeue, post-exit wait, query
 v run mk/build.vsh -- test-registry  # in-memory registry keys and values
 ```
 
@@ -31,12 +34,15 @@ v run mk/build.vsh -- test-registry  # in-memory registry keys and values
 | `test-timer` | 10 sustained PIT interrupts (`pit_timer-ok`) |
 | `test-exception` | a deliberate `int3` reaches the IDT dispatcher (`EXC 3`) |
 | `test-bugcheck` | `ke.bugcheck()` prints `BUGCHECK 0x50000001` and halts |
-| `test-file` | FAT32/VFS rename (`FileRenameInformation`) and delete-on-close (`FileDispositionInformation`) |
+| `test-file` | FAT32/VFS rename (`FileRenameInformation`), delete-on-close (`FileDispositionInformation`) and non-zero DOS creation/write timestamps exposed as FILETIMEs |
 | `test-event` | named event create, open and duplicate |
 | `test-sync` | finite timed single-object and multi-object (`WaitAll`/`WaitAny`) waits |
 | `test-namespace` | directory and symbolic-link objects, named sections, seeded roots |
 | `test-iocp` | I/O completion queue, set, remove and query |
 | `test-exit` | thread and process termination paths |
+| `test-apc` | user APC queueing, ring-3 trampoline delivery and resume |
+| `test-thread-create` | `NtCreateThreadEx` ring-3 start and a syscall from the new thread |
+| `test-thread-exit` | pre-exit wait timeout, terminate, dequeue, post-exit wait 0, `ThreadBasicInformation` |
 | `test-registry` | in-memory keys and values under `HKLM\Software\Microsoft\Windows NT\CurrentVersion` |
 
 Exit code is non-zero on failure, so all of them are CI-ready.

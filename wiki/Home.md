@@ -5,14 +5,14 @@
 ---
 
 ```
-Spotlight NT     ██████████████░░░░░░  70%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 58%, M6 95%, M10 35%
+Spotlight NT     ██████████████░░░░░░  72%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 60%, M6 95%, M10 37%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core host-tested; file-backed apply path
-Spotlight        ████████░░░░░░░░░░░░  42%   the project as a product (target: L3)
+Spotlight        ████████░░░░░░░░░░░░  44%   the project as a product (target: L3)
 ```
 
-**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 58%, M6 at
-95% and M10 at 35%. Our own UEFI boot manager chain-loads our loader, which boots
+**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 60%, M6 at
+95% and M10 at 37%. Our own UEFI boot manager chain-loads our loader, which boots
 a PE32+ kernel written in V, exits boot services, builds identity page tables and
 enters `KiSystemStartup`; the QEMU smoke run reports `SPOTBOOT true`,
 `SPOTLDR true` and the kernel marker `true`. The kernel brings up COM1, GDT/TSS/IDT,
@@ -24,7 +24,9 @@ sections with demand paging, runs a preemptive round-robin scheduler, and loads
 a PE32+ image with IAT/TEB/PEB into CPL3. Storage is a polling AHCI driver over FAT32 with in-place writes, exposed
 as a published VFS volume; `NtWriteFile` writes through to the cached volume and
 `NtFlushBuffersFile` synchronously flushes the whole 64 KiB image to the SATA
-disk. The kernel also has event, mutant, semaphore and timer objects with named
+disk. FAT32 directory entries carry DOS creation/write timestamps, surfaced as
+FILETIMEs through `FileBasicInformation`, `FileAllInformation` and
+`FileNetworkOpenInformation`. The kernel also has event, mutant, semaphore and timer objects with named
 opens, finite timed and multi-object waits, an object namespace with directory
 and symbolic-link objects, I/O completion ports, direct virtual-memory
 read/write, user APC delivery through a ring-3 trampoline, an in-memory registry,
@@ -50,7 +52,10 @@ create/open/duplicate (`test-event`),
 delivered at `NtTestAlert` or an alertable wait through a ring-3 trampoline; the
 routine runs with 3 arguments and execution resumes at the interrupted RIP —
 `test-apc`; `NtCreateThreadEx` 0xc2 creates a user thread with its own stack and
-ETHREAD and starts it in ring 3, `test-thread-create`), the object namespace
+ETHREAD and starts it in ring 3, `test-thread-create`; after exit the kind-12
+handle is waitable without consuming the signal and
+`NtQueryInformationThread` class 0 reports `ExitStatus` and
+`UniqueThread = 0x100 + tid`, `test-thread-exit`), the object namespace
 (`NtCreateDirectoryObject`/`NtOpenDirectoryObject`/`NtQueryDirectoryObject`,
 symbolic-link objects, named sections with one-level link resolution, seeded
 `\KnownDlls`, `\BaseNamedObjects`, `\Device`, `\??`; `test-namespace`),
@@ -70,12 +75,12 @@ volatile register context.
 Also: a CPL3 PE image making a multi-argument `SYSCALL` including stack arguments
 (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a synchronous
 whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT sections with demand
-paging, and a user VA allocator above 8 GiB. 27 QEMU test targets plus the host
+paging, and a user VA allocator above 8 GiB. 28 QEMU test targets plus the host
 FAT32 and unit suites are green. There is no real Windows `.exe` (L3),
 ntdll/Win32/GUI, PE userland/console or interactive installer, real process
-creation (threads are created through `NtCreateThreadEx`; teardown/join is
-missing), SMP, or COW/pagefile yet; nested-path file creation and writes are not
-implemented.
+creation (threads are created through `NtCreateThreadEx`; join/stack
+reclamation is missing), SMP, or COW/pagefile yet; nested-path file creation and
+writes are not implemented.
 
 ---
 
@@ -145,10 +150,10 @@ I [serial] loopback self-test passed
 ```
 
 Self-tests: `test-boot` (38/38 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`),
-`test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush, rename, delete-on-close, subdirectory paths),
+`test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush, rename, delete-on-close, subdirectory paths, DOS creation/write timestamps),
 `test-section` (NT sections), `test-event` (named events), `test-namespace` (directory/symbolic-link objects), `test-iocp` (I/O completion),
-`test-sync` (finite timed single- and multi-object waits), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
-`test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 27 QEMU test targets in total.
+`test-sync` (finite timed single- and multi-object waits), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-thread-exit` (exit, dequeue, post-exit wait and query), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
+`test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 28 QEMU test targets in total.
 
 ---
 

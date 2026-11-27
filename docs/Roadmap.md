@@ -13,18 +13,18 @@ M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
 M4  █████████████░░░░░░░  65%
-M5  ████████████░░░░░░░░  58%
+M5  ████████████░░░░░░░░  60%
 M6  ███████████████████░  95%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
 M9  ░░░░░░░░░░░░░░░░░░░░   0%
-M10 ███████░░░░░░░░░░░░░  35%
+M10 ███████░░░░░░░░░░░░░  37%
 M11 ░░░░░░░░░░░░░░░░░░░░   0%
 M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 70% · project 42% · PE 8%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 72% · project 44% · PE 8%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -38,12 +38,12 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
 | **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 65% |
-| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 58% |
+| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 60% |
 | **M6** | syscalls, ring-3 process, dispatch | 🟡 95% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
-| **M10** | storage, NTFS, Cc | 🟡 35% |
+| **M10** | storage, NTFS, Cc | 🟡 37% |
 | **M11** | ntdll, ALPC, console | ⬜ |
 | **M12** | Win32 layer, `.exe` corpus → **L3** | ⬜ |
 | **M13** | Track A: real MS drivers and userland | 🔬 |
@@ -94,13 +94,16 @@ Done:
 * **M4 (65%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
   page-fault handling, anonymous, file-backed and `SEC_IMAGE` NT sections with
   demand paging, and a user VA allocator above 8 GiB.
-* **M5 (58%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
+* **M5 (60%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, preemptive round-robin driven by the LAPIC timer, reference-counted
   handle duplication (`NtDuplicateObject`), thread/process termination plus
   alert state (`test-exit`), user APC delivery through a ring-3 trampoline
-  (`test-apc`: `apc-routine-ok`, `apc-resume-ok`), and dynamic user threads
+  (`test-apc`: `apc-routine-ok`, `apc-resume-ok`), dynamic user threads
   (`NtCreateThreadEx` 0xc2: own user stack, ETHREAD slot, ready-queue insertion
-  and a ring-3 entry; `test-thread-create`).
+  and a ring-3 entry; `test-thread-create`), and thread exit through the kind-12
+  handle (`NtTerminateThread` records the exit code and dequeues; a
+  non-consumptive wait returns immediately after exit; `ThreadBasicInformation`
+  reports `ExitStatus`/`UniqueThread`; `test-thread-exit`).
 * **M6 (95%)**: SYSCALL entry with stack arguments, 95 NT handlers covering
   file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
   rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
@@ -121,13 +124,18 @@ Done:
   delivered (`NtQueueApcThread` 0x45 → `NtTestAlert`/alertable wait → ring-3
   trampoline) but only `RAX`/`RBP` are restored. `NtCreateThreadEx` 0xc2 creates
   a thread with its own user stack and ETHREAD, inserts it into the ready queue
-  and starts it at CPL3 (`test-thread-create`). SSNs were re-checked against
+  and starts it at CPL3 (`test-thread-create`); its kind-12 handle then supports
+  exit/dequeue, post-exit wait and `ThreadBasicInformation`
+  (`test-thread-exit`). File handles carry DOS creation/write timestamps, and
+  `FileBasicInformation`/`FileAllInformation`/`FileNetworkOpenInformation`
+  return them as FILETIMEs (`test-file`). SSNs were re-checked against
   19045 (`NtOpenThread` 0x12f, `NtResetEvent` 0x17a); the earlier documented count
   was an undercount (token/thread SSNs 0x24, 0x2f, 0x41 and 0xc2).
-* **M10 (35%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32
+* **M10 (37%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32
   read and in-place write with cluster allocation on growth, path resolution
   through subdirectories for open/read/query (creation and writes stay
-  root-only), rename and delete-on-close, a published VFS volume
+  root-only), rename and delete-on-close, DOS creation/write timestamps in
+  directory entries, a published VFS volume
   over a 64 KiB disk image, write
   through the cached volume, `NtFlushBuffersFile` synchronously flushing the whole
   image to disk (`test-flush`), and the NTFS parser.
@@ -135,16 +143,16 @@ Done:
 Remaining:
 
 * M4: working sets, copy-on-write, section sharing.
-* M5: priorities and quantum, idle thread, scheduler-integrated APC, thread teardown/join,
-  per-thread TEB and TSS `RSP0`.
+* M5: priorities and quantum, idle thread, scheduler-integrated APC, join/stack
+  reclamation, per-thread TEB and TSS `RSP0`.
 * M6: blocking scheduler waits, full APC register-context save, remaining syscall semantics.
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
 `test-namespace`, `test-iocp`, `test-sync`, `test-exit`, `test-registry`,
 `test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc`,
-`test-thread-create` and the host unit/FAT32
-suites are green (2026-11-27) — 27 QEMU test targets in total.
+`test-thread-create`, `test-thread-exit` and the host unit/FAT32
+suites are green (2026-11-27) — 28 QEMU test targets in total.
 
 ---
 

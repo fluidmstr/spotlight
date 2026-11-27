@@ -7,7 +7,47 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] — user thread creation, 95 SSNs, kernel 70%, project 42% (2026-11-27)
+## [Unreleased] — file timestamps, thread lifecycle, kernel 72%, project 44% (2026-11-27)
+
+### Added
+
+- **DOS creation/write timestamps.** FAT32 directory entries now carry DOS
+  creation and last-write date/time, set on create, overwrite and write. VFS
+  file handles expose them as FILETIMEs through `FileBasicInformation`,
+  `FileAllInformation` and `FileNetworkOpenInformation`; path-based
+  `NtQueryAttributesFile`/`NtQueryFullAttributesFile` return the same values.
+  `test-file` asserts a non-zero write time and a non-zero directory-creation
+  time.
+- **Thread lifecycle.** A created thread's kind-12 handle supports
+  `NtTerminateThread` (exit code + ready-queue removal), a non-consumptive
+  `NtWaitForSingleObject` once the thread has exited, and
+  `NtQueryInformationThread` class 0 (`ThreadBasicInformation`: `ExitStatus`,
+  `UniqueThread = 0x100 + tid`, current process id). New `test-thread-exit`
+  covers the pre-exit wait timeout, terminate, dequeue, immediate post-exit
+  wait and the query. `ps` publishes the lifecycle callbacks so `ke` stays
+  `ps`-free; a late-SSN audit in `main` runs after `ps_init`
+  (`syscall-slot-missing`), and `tests/abi/syscall_ssn_test.v` locks the 95
+  documented SSN rows against the 19045 table.
+
+### Changed
+
+- **Readiness scales:** Spotlight NT **70% → 72%** (M5 **58% → 60%**,
+  M10 **35% → 37%**), the project overall **42% → 44%**. Spotlight X stays
+  **5%**, Spotlight PE stays **8%**; M0–M2 100%, M3 75%, M4 65%, M6 95%, all
+  others 0%.
+- **Tests:** 28 QEMU targets (adds `test-thread-exit`).
+
+### Verified
+
+| Check | Result |
+|---|---|
+| `test-file` | non-zero DOS creation/write timestamps through `FileBasicInformation` |
+| `test-thread-exit` | wait timeout, terminate, dequeue, wait 0, `ThreadBasicInformation` |
+| `test` (host) | ABI/SSN suite green, 95 SSN rows |
+
+---
+
+## [Unreleased] — historical: user thread creation, 95 SSNs, kernel 70%, project 42% (2026-11-27)
 
 ### Added
 
