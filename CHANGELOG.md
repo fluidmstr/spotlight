@@ -8,8 +8,9 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ### Added
 
-- **36 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+- **38 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
   `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27,
+  `NtQueryAttributesFile` 0x3d, `NtQueryFullAttributesFile` 0x147,
   `NtFlushBuffersFile` 0x4b, `NtQueryDirectoryFile` 0x35.
   Memory: `NtAllocateVirtualMemory` 0x18, `NtFreeVirtualMemory` 0x1e,
   `NtProtectVirtualMemory` 0x50, `NtCreateSection` 0x4a,
@@ -30,6 +31,11 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   `NtSetInformationThread` 0x0d, `NtQueryInformationThread` 0x25.
   `NtWaitForSingleObject` covers signaled and zero-timeout waits; blocking waits
   return `STATUS_NOT_IMPLEMENTED`.
+- **Info-class coverage.** `NtQueryInformationFile` accepts file classes 4–9, 14,
+  16, 17, 21, 22, 34, 35 and 39; `NtQueryInformationProcess` accepts 0, 2, 3, 4,
+  5, 7, 12, 18, 20–22, 24–34, 36 and 43; `NtQuerySystemInformation` accepts 0, 1,
+  3, 5, 7, 8, 9, 23, 35 and 103. `NtSetInformationFile` class 4
+  (`FileBasicInformation`) updates mutable file attributes.
 - **Storage**: polling AHCI (`READ DMA`/`WRITE DMA`, SPOTFAT port selection),
   FAT32 read and in-place write, and a published VFS volume over a 64 KiB disk
   image. Writes go through to the cached volume; `NtFlushBuffersFile` flushes the
