@@ -17,6 +17,8 @@ v run mk/build.vsh -- test-bugcheck
 v run mk/build.vsh -- test-file      # rename and delete-on-close
 v run mk/build.vsh -- test-event     # named event create/open/duplicate
 v run mk/build.vsh -- test-sync      # single- and multi-object waits
+v run mk/build.vsh -- test-namespace # directory and symbolic-link objects
+v run mk/build.vsh -- test-iocp      # I/O completion queue
 v run mk/build.vsh -- test-exit      # thread/process exit
 v run mk/build.vsh -- test-registry  # in-memory registry keys and values
 ```
@@ -31,7 +33,9 @@ v run mk/build.vsh -- test-registry  # in-memory registry keys and values
 | `test-bugcheck` | `ke.bugcheck()` prints `BUGCHECK 0x50000001` and halts |
 | `test-file` | FAT32/VFS rename (`FileRenameInformation`) and delete-on-close (`FileDispositionInformation`) |
 | `test-event` | named event create, open and duplicate |
-| `test-sync` | finite timed single-object and multi-object waits |
+| `test-sync` | finite timed single-object and multi-object (`WaitAll`/`WaitAny`) waits |
+| `test-namespace` | directory and symbolic-link objects, named sections, seeded roots |
+| `test-iocp` | I/O completion queue, set, remove and query |
 | `test-exit` | thread and process termination paths |
 | `test-registry` | in-memory keys and values under `HKLM\Software\Microsoft\Windows NT\CurrentVersion` |
 
@@ -71,10 +75,16 @@ I [pci] devices=0x
 I [pci] first=0x
 I [mm] free_pages=0x
 I [mm] paging-on
+I [ke] kshared-ok
+I [ke] kshared-time=0x
+I [ke] kshared-user-ok
+I [ps] sched-capacity=0x
+I [ps] ps-ready
 I [mm] cr3=0x
 I [mm] alloc-free-ok
 I [mm] pool-ok
 I [mm] vad-ok
+I [mm] demand-ok
 I [serial] loopback self-test passed
 ```
 
@@ -88,7 +98,7 @@ v run tools/vm/qemu.vsh -- run-efi --expect tests/boot/m2_serial.lines
 Output on success:
 
 ```
-boot test passed: 33 expectations matched
+boot test passed: 38 expectations matched
 ```
 
 On failure it prints every missing line and exits 1.

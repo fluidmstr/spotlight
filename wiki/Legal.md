@@ -17,8 +17,24 @@ Why:
 * GPLv2 is simpler to combine with existing components than v3.
 
 The alternative — Apache-2.0 with everything written from scratch — was
-considered and rejected: it adds 12–18 months to L3 because no Wine/ReactOS code
-could be reused.
+considered and rejected: it adds 12–18 months to L3 because LGPL-licensed
+Wine/ReactOS code could not be combined with a permissive kernel.
+
+### Reuse policy (Wine / ReactOS)
+
+* **Kernel-facing layers are original:** PE/DLL loader, registry/CM, GDI and
+  framebuffer, Win32 ABI inside the kernel. Wine/ReactOS are behavioural
+  references, not sources for `kernel/`.
+* **Userland may reuse Wine (LGPL-2.1+)** only in isolated directories
+  (`third_party/wine/`, `user/wine/`), with LGPL notices, source availability
+  and a provenance entry. The combined work is distributed under
+  GPL-2.0-or-later (LGPL-2.1 §3).
+* **Headers, constants and tests** may be used as references; copied material
+  keeps its licence notice.
+* **Microsoft binaries and assets remain forbidden.**
+
+Full decision and component table:
+[ADR-0009](https://github.com/fluidmstr/spotlight-nt/blob/main/docs/adr/0009-wine-reuse.md).
 
 ---
 
@@ -86,8 +102,12 @@ Microsoft logos or trade dress.
 | LLVM/Clang/lld | Apache-2.0 with LLVM exceptions | toolchain |
 | QEMU | GPL-2.0 | development only, not shipped |
 | OVMF/EDK2 | BSD-2-Clause | test firmware only |
-| Wine | LGPL-2.1+ | userland layer (Track B), planned |
+| Wine | LGPL-2.1+ | reference; isolated userland reuse only (ADR-0009) |
 | ReactOS | GPL-2.0+/LGPL-2.1+ | reference / optional reuse, case by case |
+| Mesa (RADV/ANV/NVK) | MIT | userland Vulkan ICD, upstream |
+| DXVK / D8VK | zlib | userland D3D translation |
+| VKD3D-Proton | LGPL-2.1+ | isolated userland D3D12 translation |
+| Linux ext4/btrfs code (if reused) | GPL-2.0 | optional backend reference; combined work under GPLv2, provenance logged |
 | FreeType | FTL/GPLv2 | fonts in the GUI, planned |
 
 New dependencies require a licence check and a row in `third_party/README.md`.

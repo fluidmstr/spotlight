@@ -13,18 +13,18 @@ M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
 M4  █████████████░░░░░░░  65%
-M5  ██████████░░░░░░░░░░  50%
-M6  ██████████████████░░  92%
+M5  ██████████░░░░░░░░░░  52%
+M6  ███████████████████░  93%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
 M9  ░░░░░░░░░░░░░░░░░░░░   0%
-M10 ██████░░░░░░░░░░░░░░  32%
+M10 ███████░░░░░░░░░░░░░  35%
 M11 ░░░░░░░░░░░░░░░░░░░░   0%
 M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  ██████████████████████████████░░░░░░░░░░░░░░░  kernel 66% · project 38%
+Overall  ███████████████████████████████░░░░░░░░░░░░░  kernel 68% · project 39%
 ```
 
 | Stage | Scope | State |
@@ -34,12 +34,12 @@ Overall  ███████████████████████�
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
 | **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 65% |
-| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 50% |
-| **M6** | syscalls, ring-3 process, dispatch | 🟡 92% |
+| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 52% |
+| **M6** | syscalls, ring-3 process, dispatch | 🟡 93% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
-| **M10** | storage, NTFS, Cc | 🟡 32% |
+| **M10** | storage, NTFS, Cc | 🟡 35% |
 | **M11** | ntdll, ALPC, console | ⬜ |
 | **M12** | Win32 layer, `.exe` corpus → **L3** | ⬜ |
 | **M13** | Track A: real MS drivers and userland | 🔬 |
@@ -90,23 +90,33 @@ Done:
 * **M4 (65%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
   page-fault handling, anonymous, file-backed and `SEC_IMAGE` NT sections with
   demand paging, and a user VA allocator above 8 GiB.
-* **M5 (50%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
-  ready queues, preemptive round-robin driven by the LAPIC timer, and
-  thread/process termination plus alert state (`test-exit`).
-* **M6 (92%)**: SYSCALL entry with stack arguments, 74 NT handlers covering
-  file (incl. path-based attribute queries, rename and delete-on-close),
-  memory, event, mutant, semaphore and timer objects with named opens, waits
-  (single- and multi-object, finite timed polling), an in-memory registry,
-  object, process/thread control, time, token, thread, process and system
+* **M5 (52%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
+  ready queues, preemptive round-robin driven by the LAPIC timer, reference-counted
+  handle duplication (`NtDuplicateObject`), and thread/process termination plus
+  alert state (`test-exit`).
+* **M6 (93%)**: SYSCALL entry with stack arguments, 91 NT handlers covering
+  file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
+  rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
+  `NtWriteVirtualMemory`, lock/unlock/flush), event, mutant, semaphore and timer
+  objects with named opens, waits (single- and multi-object `WaitAll`/`WaitAny`,
+  finite timed polling to a TSC deadline), an in-memory registry, the object
+  namespace (directories, symbolic links, named sections, seeded `\KnownDlls`/
+  `\BaseNamedObjects`/`\Device`/`\??`), I/O completion ports, object,
+  process/thread control (terminate, alerts, priority class via
+  `NtSetInformationProcess`), time, token, thread, process and system
   queries, plus pseudo-handle opens, timer resolution and instruction-cache
   flush; PE32+ loader with IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers
-  signaled, zero-timeout and finite timed waits, including multi-object waits
-  (`test-sync`); it acquires an unowned mutant or one owned by the current
-  thread, decrements a positive semaphore count and fires on timer expiry.
+  signaled, zero-timeout and finite timed waits; the multi-object calls add
+  `WaitAll`/`WaitAny` over events, mutants, semaphores and timers (`test-sync`);
+  single-object waits acquire an unowned mutant or one owned by the current
+  thread, decrement a positive semaphore count and fire on timer expiry.
   Blocking scheduler waits return `STATUS_NOT_IMPLEMENTED`; there is no APC
-  delivery.
-* **M10 (32%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32
-  read and in-place write, rename and delete-on-close, a published VFS volume
+  delivery. SSNs were re-checked against 19045 (`NtOpenThread` 0x12f,
+  `NtResetEvent` 0x17a).
+* **M10 (35%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32
+  read and in-place write with cluster allocation on growth, path resolution
+  through subdirectories for open/read/query (creation and writes stay
+  root-only), rename and delete-on-close, a published VFS volume
   over a 64 KiB disk image, write
   through the cached volume, `NtFlushBuffersFile` synchronously flushing the whole
   image to disk (`test-flush`), and the NTFS parser.
@@ -116,11 +126,12 @@ Remaining:
 * M4: working sets, copy-on-write, section sharing.
 * M5: priorities and quantum, idle thread, APC delivery.
 * M6: blocking scheduler waits, APC delivery, remaining syscall semantics.
-* M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush.
+* M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
-Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`, `test-sync`,
-`test-exit`, `test-registry`, `test-svc`, `test-svc3`, `test-misc`, `test-preempt` and the host
-unit suites are green (2026-11-27).
+Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
+`test-namespace`, `test-iocp`, `test-sync`, `test-exit`, `test-registry`,
+`test-svc`, `test-svc3`, `test-misc`, `test-preempt` and the host unit/FAT32
+suites are green (2026-11-27) — 25 QEMU test targets in total.
 
 ---
 

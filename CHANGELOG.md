@@ -4,6 +4,63 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ---
 
+## [Unreleased] — 91-SSN surface, object namespace, I/O completion, direct VM access (2026-11-27)
+
+### Added
+
+- **91 NT syscalls / 91 SSNs (up from 74).** New since the 74-SSN pass:
+  - **Waits:** `NtWaitForSingleObject` 0x04 now polls to a TSC deadline for finite
+    timeouts; `NtWaitForMultipleObjects` 0x5b and `NtWaitForMultipleObjects32`
+    0x1a implement `WaitAll`/`WaitAny` over events, mutants, semaphores and
+    timers (`test-sync`). Blocking scheduler waits still return
+    `STATUS_NOT_IMPLEMENTED`.
+  - **Named objects and handles:** `NtOpenEvent` 0x40, `NtOpenMutant` 0x125,
+    `NtOpenSemaphore` 0x12c, `NtOpenTimer` 0x130; `NtDuplicateObject` 0x3c
+    creates reference-counted aliases.
+  - **Process/thread:** `NtTerminateProcess` 0x2c and `NtTerminateThread` 0x53
+    park the target after logging; `NtTestAlert` 0x1c2, `NtAlertThread` 0x6f and
+    `NtAlertThreadByThreadId` 0x70 manage alert state. `NtQueueApcThread` 0x45
+    remains registered but returns `STATUS_NOT_IMPLEMENTED` — there is no APC
+    delivery.
+  - **Object namespace:** `NtCreateDirectoryObject` 0xa7,
+    `NtOpenDirectoryObject` 0x58, `NtQueryDirectoryObject` 0x144,
+    `NtCreateSymbolicLinkObject` 0xc1, `NtOpenSymbolicLinkObject` 0x12e,
+    `NtQuerySymbolicLinkObject` 0x15f, named sections and `NtOpenSection` 0x37
+    with one-level link resolution. The namespace is seeded with `\KnownDlls`,
+    `\BaseNamedObjects`, `\Device` and `\??` (`test-namespace`).
+  - **I/O completion:** `NtCreateIoCompletion` 0xad, `NtSetIoCompletion` 0x1a3,
+    `NtRemoveIoCompletion` 0x09, `NtQueryIoCompletion` 0x153 (`test-iocp`).
+  - **Memory:** `NtReadVirtualMemory` 0x3f, `NtWriteVirtualMemory` 0x3a,
+    `NtLockVirtualMemory` 0x10e, `NtUnlockVirtualMemory` 0x1cd,
+    `NtFlushVirtualMemory` 0xec; `NtSetInformationProcess` 0x1c handles priority
+    class and execute flags.
+  - **Files:** `NtCreateFile` honours `FILE_SUPERSEDE`, `FILE_OPEN`,
+    `FILE_CREATE`, `FILE_OPEN_IF`, `FILE_OVERWRITE` and `FILE_OVERWRITE_IF`, with
+    FAT32 cluster allocation and growth; volume classes 7/8 are accepted. FAT32
+    path resolution walks subdirectories for open/read/query; creation and writes
+    are still root-only.
+  - **Registry:** the in-memory store gained `NtQueryKey` 0x16, `NtDeleteKey`
+    0xd4, `NtDeleteValueKey` 0xd7 and `NtFlushKey` 0xea alongside create/open/
+    query/enumerate/set, seeded from
+    `HKLM\Software\Microsoft\Windows NT\CurrentVersion`.
+- **SSN corrections** against the Windows 10 19045 reference: `NtOpenThread`
+  0x12f and `NtResetEvent` 0x17a.
+- **Test target** additions: `test-namespace`, `test-iocp`; 25 QEMU targets and
+  the host FAT32/unit suites run green.
+
+### Verified
+
+| Check | Result |
+|---|---|
+| 25 QEMU boot/test targets | green |
+| `test-namespace` (directories, symbolic links, named sections) | green |
+| `test-iocp` (completion queue set/remove/query) | green |
+| `test-sync` (finite timed, `WaitAll`/`WaitAny`) | green |
+| `test-file` (disposition modes, rename, delete-on-close) | green |
+| host unit and FAT32 suites | green |
+
+---
+
 ## [Unreleased] — 74-SSN surface, waits, named objects, registry (2026-11-27)
 
 ### Added
