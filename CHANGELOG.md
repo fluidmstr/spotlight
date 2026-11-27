@@ -7,6 +7,35 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
+## [Unreleased] — user APC delivery, kernel 69%, project 41% (2026-11-27)
+
+### Added
+
+- **User APC delivery.** `NtQueueApcThread` (0x45) queues a user APC;
+  `NtTestAlert` (0x1c2) or an alertable wait arms it. On the return path
+  `SYSRET` enters a mapped user trampoline that calls the routine with three
+  arguments, restores `RAX`/`RBP` and resumes the interrupted RIP. New
+  `test-apc` target proves both halves (`apc-routine-ok`, `apc-resume-ok`).
+  Remaining limit: the full volatile register context is not saved — only
+  `RAX`/`RBP`.
+
+### Changed
+
+- **Readiness scales:** Spotlight NT **68% → 69%** (M5 **52% → 55%**,
+  M6 **93% → 94%**), the project overall **40% → 41%**. Spotlight X stays
+  **5%**, Spotlight PE stays **8%**; M0–M2 100%, M3 75%, M4 65%, M10 35%, all
+  others 0%.
+- **Tests:** 26 QEMU targets (adds `test-apc`).
+
+### Verified
+
+| Check | Result |
+|---|---|
+| `test-apc` | `apc-routine-ok`, `apc-resume-ok` |
+| QEMU smoke boot chain | `SPOTBOOT true`, `SPOTLDR true`, kernel marker `true` |
+
+---
+
 ## [Unreleased] — scales refreshed, boot chain and PE apply path (2026-11-27)
 
 ### Changed
@@ -28,7 +57,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 | Check | Result |
 |---|---|
 | QEMU smoke boot chain | `SPOTBOOT true`, `SPOTLDR true`, kernel marker `true` |
-| Spotlight PE host tests | 59 installer tests green |
+| Spotlight PE host tests | 59 installer tests + 13 image tests green |
 
 ---
 

@@ -5,14 +5,14 @@
 ---
 
 ```
-Spotlight NT     ██████████████░░░░░░  68%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 52%, M6 93%, M10 35%
+Spotlight NT     ██████████████░░░░░░  69%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 55%, M6 94%, M10 35%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core host-tested; file-backed apply path
-Spotlight        ████████░░░░░░░░░░░░  40%   the project as a product (target: L3)
+Spotlight        ████████░░░░░░░░░░░░  41%   the project as a product (target: L3)
 ```
 
-**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 52%, M6 at
-93% and M10 at 35%. Our own UEFI boot manager chain-loads our loader, which boots
+**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 55%, M6 at
+94% and M10 at 35%. Our own UEFI boot manager chain-loads our loader, which boots
 a PE32+ kernel written in V, exits boot services, builds identity page tables and
 enters `KiSystemStartup`; the QEMU smoke run reports `SPOTBOOT true`,
 `SPOTLDR true` and the kernel marker `true`. The kernel brings up COM1, GDT/TSS/IDT,
@@ -27,9 +27,10 @@ as a published VFS volume; `NtWriteFile` writes through to the cached volume and
 disk. The kernel also has event, mutant, semaphore and timer objects with named
 opens, finite timed and multi-object waits, an object namespace with directory
 and symbolic-link objects, I/O completion ports, direct virtual-memory
-read/write, an in-memory registry, timed delays and an NTFS parser.
+read/write, user APC delivery through a ring-3 trampoline, an in-memory registry,
+timed delays and an NTFS parser.
 
-**Spotlight PE:** 8% — host-tested installer core (59 tests), durable journal,
+**Spotlight PE:** 8% — host-tested installer core (59 installer tests + 13 image tests), durable journal,
 dry-run executor, deterministic GPT/FAT32 image builder with our boot artifacts,
 and a file-backed apply path (GPT primary/backup, FAT32 ESP, payload copy,
 read-back, journal). There is still no PE userland, console or interactive
@@ -44,8 +45,10 @@ lock/unlock/flush), event/mutant/semaphore/timer objects with named
 create/open/duplicate (`test-event`),
 `NtOpenEvent`/`NtOpenMutant`/`NtOpenSemaphore`/`NtOpenTimer`/
 `NtDuplicateObject`, process/thread control (`NtTerminateProcess`,
-`NtTerminateThread`, alert-state calls; `NtQueueApcThread` still returns
-`STATUS_NOT_IMPLEMENTED`), the object namespace
+`NtTerminateThread`, alert-state calls; `NtQueueApcThread` queues user APCs,
+delivered at `NtTestAlert` or an alertable wait through a ring-3 trampoline; the
+routine runs with 3 arguments and execution resumes at the interrupted RIP —
+`test-apc`), the object namespace
 (`NtCreateDirectoryObject`/`NtOpenDirectoryObject`/`NtQueryDirectoryObject`,
 symbolic-link objects, named sections with one-level link resolution, seeded
 `\KnownDlls`, `\BaseNamedObjects`, `\Device`, `\??`; `test-namespace`),
@@ -60,11 +63,12 @@ signaled and zero-timeout waits acquire an unowned mutant or one owned by the
 current thread, decrement a positive semaphore count and fire on timer expiry.
 Syscall numbers were re-checked against 19045, fixing `NtOpenThread` to 0x12f
 and `NtResetEvent` to 0x17a. Blocking scheduler waits still return
-`STATUS_NOT_IMPLEMENTED`; there is no APC delivery.
+`STATUS_NOT_IMPLEMENTED`; APC delivery restores only `RAX`/`RBP`, not the full
+volatile register context.
 Also: a CPL3 PE image making a multi-argument `SYSCALL` including stack arguments
 (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a synchronous
 whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT sections with demand
-paging, and a user VA allocator above 8 GiB. 25 QEMU test targets plus the host
+paging, and a user VA allocator above 8 GiB. 26 QEMU test targets plus the host
 FAT32 and unit suites are green. There is no real Windows `.exe` (L3),
 ntdll/Win32/GUI, PE userland/console or interactive installer, real process
 creation, SMP, or COW/pagefile yet; nested-path file creation and writes are not
@@ -140,8 +144,8 @@ I [serial] loopback self-test passed
 Self-tests: `test-boot` (38/38 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`),
 `test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush, rename, delete-on-close, subdirectory paths),
 `test-section` (NT sections), `test-event` (named events), `test-namespace` (directory/symbolic-link objects), `test-iocp` (I/O completion),
-`test-sync` (finite timed single- and multi-object waits), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
-`test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 25 QEMU test targets in total.
+`test-sync` (finite timed single- and multi-object waits), `test-apc` (APC delivery and resume), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
+`test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 26 QEMU test targets in total.
 
 ---
 
