@@ -136,7 +136,7 @@ And the machine itself proves the rest:
 | Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `pit_timer-ok` |
 | Exception routing | `v run mk/build.vsh -- test-exception` | `EXC 3` on debugcon |
 | Bugcheck path | `v run mk/build.vsh -- test-bugcheck` | `BUGCHECK 0x50000001` |
-| Host unit tests | `v run mk/build.vsh -- test` | 5/5 suites |
+| Host unit tests | `v run mk/build.vsh -- test` | PE, memory, SSDT/symgen, scheduler, RTC, image and FAT32/NTFS suites green |
 
 ### Recent kernel progress (2026-11-27)
 
