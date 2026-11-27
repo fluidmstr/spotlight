@@ -4,19 +4,24 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ---
 
-## [Unreleased] — kernel I/O and syscall progress (2026-11-26, updated 2026-11-27)
+## [Unreleased] — 74-SSN surface, waits, named objects, registry (2026-11-27)
 
 ### Added
 
-- **51 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+- **74 NT syscalls (up from 51).** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
   `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27,
   `NtQueryAttributesFile` 0x3d, `NtQueryFullAttributesFile` 0x147,
   `NtFlushBuffersFile` 0x4b, `NtQueryDirectoryFile` 0x35.
+  `NtSetInformationFile` now handles rename (`FileRenameInformation`) and
+  delete-on-close (`FileDispositionInformation`), proven by `test-file`.
   Memory: `NtAllocateVirtualMemory` 0x18, `NtFreeVirtualMemory` 0x1e,
   `NtProtectVirtualMemory` 0x50, `NtCreateSection` 0x4a,
   `NtQuerySection` 0x51, `NtMapViewOfSection` 0x28, `NtUnmapViewOfSection` 0x2a. Events:
-  `NtCreateEvent` 0x48, `NtSetEvent` 0x0e, `NtResetEvent` 0x7a,
-  `NtQueryEvent` 0x56. Timing and waits: `NtWaitForSingleObject` 0x04,
+  `NtCreateEvent` 0x48, `NtOpenEvent` 0x40 (named create/open/duplicate,
+  `test-event`), `NtSetEvent` 0x0e, `NtResetEvent` 0x7a,
+  `NtQueryEvent` 0x56. Timing and waits: `NtWaitForSingleObject` 0x04
+  (finite timed polling), `NtWaitForMultipleObjects` 0x5b,
+  `NtWaitForMultipleObjects32` 0x1a (`test-sync`),
   `NtDelayExecution` 0x34, `NtQueryPerformanceCounter` 0x31,
   `NtQuerySystemTime` 0x5a, `NtQueryTimerResolution` 0x163,
   `NtSetTimerResolution` 0x1b2 (15.625 ms). Queries: `NtQueryInformationProcess` 0x19,
@@ -26,7 +31,13 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   pseudo-handles), `NtQueryObject` 0x10 (`ObjectBasicInformation`:
   attributes, granted access, handle/pointer counts, creation time),
   `NtOpenProcess` 0x26 and `NtOpenThread` 0x2f (validated `ClientId`, return the
-  current pseudo-handles). Mutants: `NtCreateMutant` 0xb4 (optional initial
+  current pseudo-handles), `NtDuplicateObject` 0x3c. Named opens:
+  `NtOpenEvent` 0x40, `NtOpenMutant` 0x125, `NtOpenSemaphore` 0x12c,
+  `NtOpenTimer` 0x130.
+  Process/thread control: `NtTerminateProcess` 0x2c, `NtTerminateThread` 0x53,
+  `NtTestAlert` 0x1c2, `NtAlertThread` 0x6f, `NtAlertThreadByThreadId` 0x70
+  (`test-exit`); `NtQueueApcThread` 0x45 is registered but returns
+  `STATUS_NOT_IMPLEMENTED`. Mutants: `NtCreateMutant` 0xb4 (optional initial
   owner), `NtReleaseMutant` 0x20 (returns the previous count) and
   `NtQueryMutant` 0x156 (`MutantBasicInformation`: count, owned-by-caller,
   abandoned). Semaphores: `NtReleaseSemaphore` 0x0a (returns the previous
@@ -36,16 +47,22 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   `NtSetTimer` 0x62 (relative 100 ns due time, optional period),
   `NtCancelTimer` 0x61 (returns the previous state) and
   `NtQueryTimer` 0x38 (`TimerBasicInformation`: remaining time, state).
+  Registry (in-memory, seeded from
+  `HKLM\Software\Microsoft\Windows NT\CurrentVersion`; no hives):
+  `NtOpenKey` 0x12, `NtCreateKey` 0x1d, `NtQueryKey` 0x16,
+  `NtQueryValueKey` 0x17, `NtEnumerateKey` 0x32,
+  `NtEnumerateValueKey` 0x13, `NtSetValueKey` 0x60, `NtDeleteKey` 0xd4,
+  `NtDeleteValueKey` 0xd7, `NtFlushKey` 0xea (`test-registry`).
   Tokens: `NtOpenProcessToken` 0x129, `NtOpenProcessTokenEx` 0x30 and
   `NtQueryInformationToken` 0x21 (classes 8/10/18/20 return `TokenPrimary`,
   `TokenStatistics`, `TokenElevationTypeDefault` and a not-elevated state).
   Cache: `NtFlushInstructionCache` 0xe9 (validated
   no-op; x86 I-cache is coherent). Threads:
   `NtSetInformationThread` 0x0d, `NtQueryInformationThread` 0x25.
-  `NtWaitForSingleObject` covers signaled and zero-timeout waits, acquires an
-  unowned mutant or one owned by the current thread, decrements a positive
-  semaphore count and fires on timer expiry; blocking waits return
-  `STATUS_NOT_IMPLEMENTED`.
+  `NtWaitForSingleObject` covers signaled, zero-timeout and finite timed waits,
+  acquires an unowned mutant or one owned by the current thread, decrements a
+  positive semaphore count and fires on timer expiry; blocking scheduler waits
+  return `STATUS_NOT_IMPLEMENTED`, and there is no APC delivery.
 - **Info-class coverage.** `NtQueryInformationFile` accepts file classes 4–9, 14,
   16, 17, 21, 22, 34, 35 and 39; `NtQueryInformationProcess` accepts 0, 2, 3, 4,
   5, 7, 12, 18, 20–22, 24–34, 36 and 43; `NtQuerySystemInformation` accepts 0, 1,
@@ -55,8 +72,10 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   elevated). `NtSetInformationFile` class 4
   (`FileBasicInformation`) updates mutable file attributes.
 - **Storage**: polling AHCI (`READ DMA`/`WRITE DMA`, SPOTFAT port selection),
-  FAT32 read and in-place write, and a published VFS volume over a 64 KiB disk
-  image. Writes go through to the cached volume; `NtFlushBuffersFile` flushes the
+  FAT32 read and in-place write, rename (`FileRenameInformation`) and
+  delete-on-close (`FileDispositionInformation`, `test-file`), and a published
+  VFS volume over a 64 KiB disk image. Writes go through to the cached volume;
+  `NtFlushBuffersFile` flushes the
   whole image to the SATA disk (`test-flush` re-reads sector 34).
 - **Memory**: anonymous, file-backed and `SEC_IMAGE` NT sections with demand
   paging; user VA allocator above 8 GiB.
@@ -70,7 +89,10 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 |---|---|
 | `test-boot`, `test-exe`, `test-exe-file`, `test-disk` | green |
 | `test-preempt`, `test-svc`, `test-svc3`, `test-sync` | green |
-| `test-file`, `test-section`, `test-event` | green |
+| `test-file` (rename, delete-on-close), `test-section` | green |
+| `test-event` (named create/open/duplicate) | green |
+| `test-exit` (thread/process termination) | green |
+| `test-registry` (in-memory keys and values) | green |
 | `test-misc` (timer resolution, pseudo-handle opens, I-cache flush) | green |
 | `test-flush` (whole-image flush, device re-read) | green |
 | host unit tests | green |

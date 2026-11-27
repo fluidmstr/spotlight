@@ -5,14 +5,14 @@
 ---
 
 ```
-Spotlight NT     ████████████░░░░░░░░  62%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 45%, M6 90%, M10 30%
+Spotlight NT     █████████████░░░░░░░  66%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 50%, M6 92%, M10 32%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   5%   installer environment
-Spotlight        ███████░░░░░░░░░░░░░  36%   the project as a product (target: L3)
+Spotlight        ████████░░░░░░░░░░░░  38%   the project as a product (target: L3)
 ```
 
-**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 45%, M6 at
-90% and M10 at 30%. Our own UEFI loader boots a PE32+ kernel written in V, exits
+**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 50%, M6 at
+92% and M10 at 32%. Our own UEFI loader boots a PE32+ kernel written in V, exits
 boot services, builds identity page tables and enters `KiSystemStartup`. The
 kernel brings up COM1, GDT/TSS/IDT, exception handling, KPCR, hardware
 interrupts, a bugcheck path, ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, a
@@ -22,20 +22,32 @@ sections with demand paging, runs a preemptive round-robin scheduler, and loads
 a PE32+ image with IAT/TEB/PEB into CPL3. Storage is a polling AHCI driver over FAT32 with in-place writes, exposed
 as a published VFS volume; `NtWriteFile` writes through to the cached volume and
 `NtFlushBuffersFile` synchronously flushes the whole 64 KiB image to the SATA
-disk. The kernel also has event objects, timed delays and an NTFS parser.
+disk. The kernel also has event, mutant, semaphore and timer objects with named
+opens, finite timed and multi-object waits, an in-memory registry, timed delays
+and an NTFS parser.
 
-**Recent kernel progress:** 51 NT syscalls (file and path-based attribute queries, memory, event, mutant, semaphore and timer objects, token queries for classes 8/10/18/20, timing and thread
-information, current-process/thread handle opens, timer resolution and
-instruction-cache flush), a CPL3 PE image making a multi-argument `SYSCALL` including stack
-arguments (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a
-synchronous whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT
-sections with demand paging, event
-objects, `NtDelayExecution` and a user VA allocator above 8 GiB.
-`NtWaitForSingleObject` handles signaled and zero-timeout waits, acquires an
-unowned mutant or one owned by the current thread, decrements a positive
-semaphore count and fires on timer expiry; blocking waits
-still return `STATUS_NOT_IMPLEMENTED`. There is no
-userland, installer or GUI yet, and no real Windows `.exe`.
+**Recent kernel progress:** 74 NT syscalls, up from 51: file and path-based
+attribute queries (including rename via `FileRenameInformation` and
+delete-on-close via `FileDispositionInformation`), memory and sections,
+event/mutant/semaphore/timer objects with named create/open/duplicate
+(`test-event`), `NtOpenEvent`/`NtOpenMutant`/`NtOpenSemaphore`/`NtOpenTimer`/
+`NtDuplicateObject`, process/thread control (`NtTerminateProcess`,
+`NtTerminateThread`, alert-state calls; `NtQueueApcThread` still returns
+`STATUS_NOT_IMPLEMENTED`), in-memory registry keys and values seeded from
+`HKLM\Software\Microsoft\Windows NT\CurrentVersion`, token queries for classes
+8/10/18/20, timing and thread information, current-process/thread handle opens,
+timer resolution and instruction-cache flush. `NtWaitForSingleObject` supports
+finite timed polling, and `NtWaitForMultipleObjects` (0x5b) /
+`NtWaitForMultipleObjects32` (0x1a) work (`test-sync`); signaled and
+zero-timeout waits acquire an unowned mutant or one owned by the current thread,
+decrement a positive semaphore count and fire on timer expiry. Blocking
+scheduler waits still return `STATUS_NOT_IMPLEMENTED`; there is no APC delivery.
+Also: a CPL3 PE image making a multi-argument `SYSCALL` including stack arguments
+(`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a synchronous
+whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT sections with demand
+paging, and a user VA allocator above 8 GiB. `test-exit` and `test-registry` are
+new targets. There is no real Windows `.exe` (L3), ntdll/Win32/GUI, installer,
+real process creation, SMP, or COW/pagefile yet.
 
 ---
 
@@ -101,8 +113,9 @@ I [serial] loopback self-test passed
 ```
 
 Self-tests: `test-boot` (33/33 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`),
-`test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush),
-`test-section` (NT sections), `test-event`/`test-sync` (events + waits), `test-svc`/`test-svc3` (multi-argument SYSCALL); host unit tests.
+`test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush, rename and delete-on-close),
+`test-section` (NT sections), `test-event` (named events), `test-sync` (single- and multi-object waits),
+`test-exit` (thread/process exit), `test-registry` (in-memory keys and values), `test-svc`/`test-svc3` (multi-argument SYSCALL); host unit tests.
 
 ---
 

@@ -14,6 +14,11 @@ v run mk/build.vsh -- test-lapic    # LAPIC timer takeover
 v run mk/build.vsh -- test-timer    # 10 sustained timer interrupts
 v run mk/build.vsh -- test-exception
 v run mk/build.vsh -- test-bugcheck
+v run mk/build.vsh -- test-file      # rename and delete-on-close
+v run mk/build.vsh -- test-event     # named event create/open/duplicate
+v run mk/build.vsh -- test-sync      # single- and multi-object waits
+v run mk/build.vsh -- test-exit      # thread/process exit
+v run mk/build.vsh -- test-registry  # in-memory registry keys and values
 ```
 
 | Command | Asserts |
@@ -24,6 +29,11 @@ v run mk/build.vsh -- test-bugcheck
 | `test-timer` | 10 sustained PIT interrupts (`pit_timer-ok`) |
 | `test-exception` | a deliberate `int3` reaches the IDT dispatcher (`EXC 3`) |
 | `test-bugcheck` | `ke.bugcheck()` prints `BUGCHECK 0x50000001` and halts |
+| `test-file` | FAT32/VFS rename (`FileRenameInformation`) and delete-on-close (`FileDispositionInformation`) |
+| `test-event` | named event create, open and duplicate |
+| `test-sync` | finite timed single-object and multi-object waits |
+| `test-exit` | thread and process termination paths |
+| `test-registry` | in-memory keys and values under `HKLM\Software\Microsoft\Windows NT\CurrentVersion` |
 
 Exit code is non-zero on failure, so all of them are CI-ready.
 

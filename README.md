@@ -9,20 +9,20 @@
 
 <br>
 
-![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-62%25%20·%20M4-2ea043?style=flat-square)
+![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-66%25%20·%20M4-2ea043?style=flat-square)
 ![Spotlight X](https://img.shields.io/badge/Spotlight%20X-5%25-lightgrey?style=flat-square)
 ![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-5%25-lightgrey?style=flat-square)
-![Spotlight](https://img.shields.io/badge/Spotlight%20project-36%25-orange?style=flat-square)
+![Spotlight](https://img.shields.io/badge/Spotlight%20project-38%25-orange?style=flat-square)
 ![ABI](https://img.shields.io/badge/ABI-Windows%2010%20x64%2019045-0078d4?style=flat-square)
 ![Language](https://img.shields.io/badge/language-V-4f7396?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--2.0--or--later-blue?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Spotlight NT     ████████████░░░░░░░░  62%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 45%, M6 90%, M10 30%
+Spotlight NT     █████████████░░░░░░░  66%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 50%, M6 92%, M10 32%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro — skeleton + specs
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   5%   installer environment — docs + build skeleton
-Spotlight        ███████░░░░░░░░░░░░░  36%   the project as a product (target: L3)
+Spotlight        ████████░░░░░░░░░░░░  38%   the project as a product (target: L3)
 ```
 
 </div>
@@ -53,10 +53,10 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 
 | Scale | What it measures | Progress | Works today | Next |
 |---|---|---|---|---|
-| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **62%** (M0–M2 ✅, M3 75%, M4 65%, M5 45%, M6 90%, M10 30%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 51 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, PE32+ loader with IAT/TEB/PEB/process CR3, polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, event, mutant, semaphore and timer objects, token queries and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle; M6: blocking waits and broader dispatch; M10: ext4, partial/async flush, write-back cache |
+| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **66%** (M0–M2 ✅, M3 75%, M4 65%, M5 50%, M6 92%, M10 32%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 74 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, PE32+ loader with IAT/TEB/PEB/process CR3, polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, rename and delete-on-close, event, mutant, semaphore and timer objects with named opens, single- and multi-object waits, in-memory registry, token queries and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle/APC; M6: blocking waits and broader dispatch; M8: hives; M10: ext4, partial/async flush, write-back cache |
 | **Spotlight X** | userland, Win32 layer, GUI, distro | **5%** (skeleton + specs) | repository layout, architecture and app-compatibility plans | ntdll and PE loader behind syscalls (needs L1) |
 | **Spotlight PE** | installer / recovery environment | **5%** (docs + build script) | repo, subsystem docs, `mk/build.vsh` skeleton | console/explorer on the kernel, installer flow |
-| **Spotlight** | the project as a product | **36%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
+| **Spotlight** | the project as a product | **38%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
 
 > The kernel is ahead of the OS. That is expected: userland and the installer need
 > a broad, stable syscall surface, not a handful of handlers.
@@ -124,6 +124,11 @@ And the machine itself proves the rest:
 | PE user entry | `v run mk/build.vsh -- test-pe-user` | `image-base=0x140000000`, `entry=0x140001000`, `pe-exec-ok` |
 | PE imports/TEB | `v run mk/build.vsh -- test-exe` | `imports=0x1`, `iat=0x180000000`, `teb=0x170000000`, IAT call, `exe-ok` |
 | File-backed .exe | `v run mk/build.vsh -- test-exe-file` | `file-fat32=0x800`, IAT call, `exe-file-ok` |
+| Rename / delete-on-close | `v run mk/build.vsh -- test-file` | rename and delete-on-close through FAT32/VFS |
+| Named events | `v run mk/build.vsh -- test-event` | named create, open and duplicate |
+| Waits | `v run mk/build.vsh -- test-sync` | finite timed single- and multi-object waits |
+| Thread/process exit | `v run mk/build.vsh -- test-exit` | termination paths |
+| Registry | `v run mk/build.vsh -- test-registry` | in-memory keys/values under `HKLM\Software\Microsoft\Windows NT\CurrentVersion` |
 | NTFS parser | `v -path "kernel;@vlib" test tests/unit/fs` | VBR, FILE, USA, attributes, FILE_NAME |
 | LAPIC timer | `v run mk/build.vsh -- test-lapic` | `lapic_timer-ok`, PIC/PIT masked |
 | Timer interrupts | `v run mk/build.vsh -- test-timer` | 10 PIT ticks, `pit_timer-ok` |
@@ -133,7 +138,8 @@ And the machine itself proves the rest:
 
 ### Recent kernel progress (2026-11-27)
 
-* **51 NT syscalls** dispatched: file I/O (`NtCreateFile`, `NtReadFile`,
+* **74 NT syscalls / 74 SSNs** registered: file I/O
+  (`NtCreateFile`, `NtReadFile`,
   `NtWriteFile`, `NtQueryInformationFile`, `NtSetInformationFile`,
   `NtQueryAttributesFile`, `NtQueryFullAttributesFile`,
   `NtFlushBuffersFile`, `NtQueryVolumeInformationFile`,
@@ -144,8 +150,15 @@ And the machine itself proves the rest:
   information (`NtClose`, `NtQueryObject`, `NtOpenProcess` and `NtOpenThread`
   returning the current-process/thread pseudo-handles), thread
   information (`NtQueryInformationThread`, `NtSetInformationThread`),
-  timing/synchronization (`NtDelayExecution`, `NtQueryPerformanceCounter`,
-  `NtQuerySystemTime`, `NtWaitForSingleObject`, `NtQueryTimerResolution`,
+  named objects and opens (`NtOpenEvent` 0x40, `NtOpenMutant` 0x125,
+  `NtOpenSemaphore` 0x12c, `NtOpenTimer` 0x130, `NtDuplicateObject` 0x3c),
+  process/thread control (`NtTerminateProcess` 0x2c, `NtTerminateThread` 0x53,
+  `NtTestAlert` 0x1c2, `NtAlertThread` 0x6f, `NtAlertThreadByThreadId` 0x70;
+  `NtQueueApcThread` 0x45 is registered but returns
+  `STATUS_NOT_IMPLEMENTED`), timing and waits (`NtDelayExecution`,
+  `NtQueryPerformanceCounter`, `NtQuerySystemTime`, `NtWaitForSingleObject`
+  with finite timed polling, `NtWaitForMultipleObjects` 0x5b,
+  `NtWaitForMultipleObjects32` 0x1a, `NtQueryTimerResolution`,
   `NtSetTimerResolution`), process/system queries (`NtQueryInformationProcess`,
   `NtQuerySystemInformation`, `NtQueryVirtualMemory`, `NtYieldExecution`),
   mutants (`NtCreateMutant` 0xb4, `NtReleaseMutant` 0x20, `NtQueryMutant` 0x156
@@ -153,6 +166,11 @@ And the machine itself proves the rest:
   `NtCreateSemaphore` 0xc0, `NtQuerySemaphore` 0x15e with
   `SemaphoreBasicInformation`), timers (`NtCreateTimer` 0xc3, `NtSetTimer` 0x62,
   `NtCancelTimer` 0x61, `NtQueryTimer` 0x38 with `TimerBasicInformation`),
+  in-memory registry (`NtOpenKey` 0x12, `NtCreateKey` 0x1d, `NtQueryKey` 0x16,
+  `NtQueryValueKey` 0x17, `NtEnumerateKey` 0x32, `NtEnumerateValueKey` 0x13,
+  `NtSetValueKey` 0x60, `NtDeleteKey` 0xd4, `NtDeleteValueKey` 0xd7,
+  `NtFlushKey` 0xea; seeded from
+  `HKLM\Software\Microsoft\Windows NT\CurrentVersion`, no hives yet),
   tokens (`NtOpenProcessToken` 0x129, `NtOpenProcessTokenEx` 0x30,
   `NtQueryInformationToken` 0x21; classes 8/10/18/20: `TokenType` →
   `TokenPrimary`, `TokenStatistics`, `TokenElevationType` →
@@ -161,14 +179,16 @@ And the machine itself proves the rest:
   x86). Path-based attribute queries (`NtQueryAttributesFile` 0x3d,
   `NtQueryFullAttributesFile` 0x147) return `FILE_BASIC_INFORMATION` and
   `FILE_NETWORK_OPEN_INFORMATION`; `NtSetInformationFile` class 4 updates file
-  attributes. Info classes cover file 4–9/14/16/17/21/22/34/35/39, process
-  0/2/3/4/5/7/12/18/20–22/24–34/36/43, system 0/1/3/5/7/8/9/23/35/103 and token
-  8/10/18/20.
-  Signaled and zero-timeout waits work, and `NtWaitForSingleObject` acquires an
-  unowned mutant or one owned by the current thread, decrements a positive
-  semaphore count and fires when a timer expires; releasing past a semaphore's
-  maximum returns `STATUS_SEMAPHORE_LIMIT_EXCEEDED`; blocking
-  waits still return `STATUS_NOT_IMPLEMENTED`.
+  attributes, `FileRenameInformation` renames and `FileDispositionInformation`
+  deletes on close (proven by `test-file`). Info classes cover file
+  4–9/14/16/17/21/22/34/35/39, process 0/2/3/4/5/7/12/18/20–22/24–34/36/43,
+  system 0/1/3/5/7/8/9/23/35/103 and token 8/10/18/20.
+  Signaled, zero-timeout and finite timed waits work, including multi-object
+  waits (`test-sync`); `NtWaitForSingleObject` acquires an unowned mutant or one
+  owned by the current thread, decrements a positive semaphore count and fires
+  when a timer expires; releasing past a semaphore's maximum returns
+  `STATUS_SEMAPHORE_LIMIT_EXCEEDED`. Blocking scheduler waits still return
+  `STATUS_NOT_IMPLEMENTED`; there is no APC delivery.
 * **Storage**: polling AHCI (`READ DMA`/`WRITE DMA`, SPOTFAT port selection),
   FAT32 read and in-place write, and a published VFS volume over a 64 KiB disk
   image. `NtWriteFile` writes through to the cached volume; `NtFlushBuffersFile`
@@ -181,9 +201,10 @@ And the machine itself proves the rest:
 * **Scheduling**: preemptive round-robin with the LAPIC timer.
 
 Boot suites `test-boot`, `test-disk`, `test-file`, `test-section`, `test-event`,
-`test-sync`, `test-svc`, `test-svc3`, `test-misc`, `test-preempt` and the host
-unit tests are green. There is still no userland, installer or GUI, and no real
-Windows `.exe` yet.
+`test-sync`, `test-exit`, `test-registry`, `test-svc`, `test-svc3`, `test-misc`,
+`test-preempt` and the host unit tests are green. There is still no real Windows
+`.exe` (L3), no ntdll/Win32/GUI, no installer, no APC delivery, no blocking
+scheduler waits, no real process creation, no SMP, and no COW or pagefile.
 
 What this means: our own UEFI loader reads a PE32+ kernel, allocates pages, applies
 relocations, exits boot services, builds its own page tables, switches CR3, installs
@@ -202,12 +223,12 @@ M1  ████████████████████ 100%   Loader: 
 M2  ████████████████████ 100%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
 M3  ███████████████░░░░░  75%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI
 M4  █████████████░░░░░░░  65%   Memory manager: PFN, paging, VAD, NT sections, demand
-M5  █████████░░░░░░░░░░░  45%   Processes/threads: preemptive round-robin, queues, CR3
-M6  ██████████████████░░  90%   Syscalls: 51 NT handlers, multi-arg entry, events, mutants, semaphores, timers, tokens
+M5  ██████████░░░░░░░░░░  50%   Processes/threads: preemptive round-robin, queues, CR3
+M6  ██████████████████░░  92%   Syscalls: 74 NT handlers, multi-arg entry, named objects, waits, registry
 M7  ░░░░░░░░░░░░░░░░░░░░   0%   I/O manager, PnP, power  ← gate G2
 M8  ░░░░░░░░░░░░░░░░░░░░   0%   Registry, hives, transactions
 M9  ░░░░░░░░░░░░░░░░░░░░   0%   Security: tokens, ACL, integrity
-M10 ██████░░░░░░░░░░░░░░  30%   Storage: AHCI, FAT32 read/write, persistent whole-image flush, NTFS parser
+M10 ██████░░░░░░░░░░░░░░  32%   Storage: AHCI, FAT32 read/write, persistent whole-image flush, NTFS parser
 M11 ░░░░░░░░░░░░░░░░░░░░   0%   ntdll, ALPC, console
 M12 ░░░░░░░░░░░░░░░░░░░░   0%   Win32 layer, application corpus  → L3
 M13 ░░░░░░░░░░░░░░░░░░░░   0%   Track A research: real MS drivers/userland
@@ -221,9 +242,9 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | ✅ closed | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI | 🟡 75% | `lapic_bus_hz≈998MHz`, `ioapic_irq-ok`, `pci devices=6` |
 | **M4** | Mm: PFN page database, kernel pool, page tables, VAD, sections | 🟡 65% | `paging-on`, `vad-ok`, `demand-ok`, anonymous, file-backed and `SEC_IMAGE` NT sections (`test-section`, `test-section-file`, `test-section-image`) |
-| **M5** | Ob/Ps: objects, processes, threads, scheduler | 🟡 45% | `preempt-ok`, `sched-tid=0x1`, `cr3-b`/`cr3-a`, `thread-a-resumed` |
-| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 90% | 51 NT handlers; `test-svc3` multi-argument SYSCALL incl. stack args; `test-exe-file` |
-| **M10** | Storage: VFS, FAT32/ext4/NTFS/btrfs, Cc | 🟡 30% | `test-disk`/`test-file`/`test-flush`: AHCI + FAT32 read/write, VFS volume, 64 KiB image, whole-image flush re-read; NTFS parser |
+| **M5** | Ob/Ps: objects, processes, threads, scheduler | 🟡 50% | `preempt-ok`, `sched-tid=0x1`, `cr3-b`/`cr3-a`, `thread-a-resumed`, `test-exit` |
+| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 92% | 74 NT handlers; `test-svc3` multi-argument SYSCALL incl. stack args; `test-event` named events, `test-sync` waits, `test-registry`, `test-exe-file` |
+| **M10** | Storage: VFS, FAT32/ext4/NTFS/btrfs, Cc | 🟡 32% | `test-disk`/`test-file`/`test-flush`: AHCI + FAT32 read/write, rename and delete-on-close, VFS volume, 64 KiB image, whole-image flush re-read; NTFS parser |
 | M7–M9, M11–M12 | Io, Cm, Se, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | distributable OS image | ⬜ | — |
@@ -263,7 +284,7 @@ choices:
 * Details: ADR-0010 (namespace/filesystems), ADR-0011 (graphics), ADR-0012
   (session fallback) in `spotlight-nt/docs/adr/`.
 
-That is why the overall project sits at 36% while the kernel is at 62%: the OS
+That is why the overall project sits at 38% while the kernel is at 66%: the OS
 needs the kernel to finish first, not the other way around.
 
 ---

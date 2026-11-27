@@ -41,14 +41,14 @@ Everything after step 9 uses only port `0xE9` until the kernel's COM1 driver run
 | **Ke** | GDT/IDT/TSS, IRQL, DPC/APC, scheduler, threads | 🟡 descriptors, KPCR, preemptive round-robin |
 | **HAL** | CPU, PIC/PIT → APIC/HPET, PCI, ACPI, SMP | 🟡 COM1, ACPI/APIC, PCI, HPET |
 | **Mm** | PFN database, paging, sections, pools, MDL | 🟡 PFN, pool, paging, VAD, sections |
-| **Ob** | object manager, handles, namespaces | 🟡 event objects |
-| **Ps** | processes, threads, ETHREAD/EPROCESS | 🟡 processes, threads, CR3, scheduler |
+| **Ob** | object manager, handles, namespaces | 🟡 event/mutant/semaphore/timer objects, named opens, duplicate |
+| **Ps** | processes, threads, ETHREAD/EPROCESS | 🟡 processes, threads, CR3, scheduler, termination/alert |
 | **Io** | IRPs, device stacks, PnP, power | ⬜ |
-| **Cm** | registry, hives | ⬜ |
+| **Cm** | registry, hives | ⬜ hives; in-memory key/value store only |
 | **Se** | tokens, SIDs, ACL, integrity | ⬜ |
 | **Lpc** | ALPC ports | ⬜ |
 | **Cc** | file cache | ⬜ |
-| **Syscall** | LSTAR/KiSystemCall64, SSDT | 🟡 51 handlers, multi-arg entry |
+| **Syscall** | LSTAR/KiSystemCall64, SSDT | 🟡 74 handlers, multi-arg entry |
 
 ---
 
