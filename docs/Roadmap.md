@@ -14,7 +14,7 @@ M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
 M4  █████████████░░░░░░░  65%
 M5  ████████████░░░░░░░░  65%
-M6  ███████████████████░  97%
+M6  ███████████████████░  98%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
 M9  ░░░░░░░░░░░░░░░░░░░░   0%
@@ -24,7 +24,7 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   5%
 
-Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 75% · X 8% · project 46% · PE 8%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 76% · X 10% · project 47% · PE 9%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -39,7 +39,7 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
 | **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 65% |
 | **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 65% |
-| **M6** | syscalls, ring-3 process, dispatch | 🟡 97% |
+| **M6** | syscalls, ring-3 process, dispatch | 🟡 98% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
@@ -59,7 +59,7 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 * `bugcheck(code, subsys, msg)` and `assert_failed`.
 * 8259 remap, PIT 100 Hz, 16 IRQ stubs with `iretq`, `sti`; `pit_ticks=0x3`.
 
-### M3, in detail — 75%
+### M3, in detail - 75%
 
 Done:
 
@@ -104,7 +104,7 @@ Done:
   handle (`NtTerminateThread` records the exit code and dequeues; a
   non-consumptive wait returns immediately after exit; `ThreadBasicInformation`
   reports `ExitStatus`/`UniqueThread`; `test-thread-exit`).
-* **M6 (97%)**: SYSCALL entry with stack arguments, 95 NT handlers covering
+* **M6 (98%)**: SYSCALL entry with stack arguments, 95 NT handlers covering
   file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
   rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
   `NtWriteVirtualMemory`, lock/unlock/flush), event, mutant, semaphore and timer
@@ -115,7 +115,9 @@ Done:
   process/thread control (terminate, alerts, priority class via
   `NtSetInformationProcess`), time, token, thread, process and system
   queries, plus pseudo-handle opens, timer resolution and instruction-cache
-  flush; PE32+ loader with IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers
+  flush; PE32+ loader with IAT/TEB/PEB at CPL3. `test-x-hello` reads the X-authored
+  `\X\hello.exe` through AHCI/FAT32, creates a separate DTB/TEB/PEB/user-stack context and
+  completes `NtQuerySystemTime` plus the `XELL` syscall marker (`x-hello-ok`). `NtWaitForSingleObject` covers
   signaled, zero-timeout and scheduler-blocking finite waits; the multi-object
   calls add `WaitAll`/`WaitAny` over events, mutants, semaphores and timers
   (`test-sync`); `test-blocking-wait` proves zero poll iterations and signal/timeout
@@ -151,10 +153,10 @@ Remaining:
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
-`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-exit`, `test-registry`,
+`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-x-hello`, `test-exit`, `test-registry`,
 `test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc`,
 `test-thread-create`, `test-thread-exit` and the host unit/FAT32
-suites are green (2026-11-28) — 29 QEMU test targets in total.
+suites are green (2026-11-28) — 30 QEMU test targets in total.
 
 ---
 
@@ -163,7 +165,7 @@ suites are green (2026-11-28) — 29 QEMU test targets in total.
 | Level | Definition | State |
 |---|---|---|
 | L0 | our loader and kernel boot on UEFI | ✅ |
-| L1 | ring-3 process, syscall round-trip | ⬜ |
+| L1 | ring-3 process, syscall round-trip | ✅ X `hello.exe` from FAT32 (`test-x-hello`) |
 | L2 | our ntdll + kernel32 + CRT, our programs | ⬜ |
 | L3 | **20 third-party `.exe` binaries pass checklists** | ⬜ |
 | L4 | real Microsoft drivers load and work | ⬜ |
