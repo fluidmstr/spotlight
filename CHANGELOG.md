@@ -7,6 +7,31 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
+## [Unreleased] — scales refreshed, boot chain and PE apply path (2026-11-27)
+
+### Changed
+
+- **Readiness scales:** Spotlight PE **6% → 8%**, the project overall
+  **39% → 40%**. Spotlight NT stays **68%**, Spotlight X stays **5%**, and the
+  milestones are unchanged: M0–M2 100%, M3 75%, M4 65%, M5 52%, M6 93%,
+  M10 35%, all others 0%.
+- **Boot chain:** `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, `SPOTLDR` loads
+  `ntoskrnl.exe`, and the kernel reaches HAL initialization under QEMU/OVMF.
+- **Spotlight PE:** documented the host-tested installer core (59 tests), the
+  durable journal, the dry-run executor, the deterministic GPT/FAT32 image
+  builder with our boot artifacts, and the file-backed apply path (GPT
+  primary/backup, FAT32 ESP, payload copy, read-back, journal). There is still
+  no PE userland, console or interactive installer.
+
+### Verified
+
+| Check | Result |
+|---|---|
+| QEMU smoke boot chain | `SPOTBOOT true`, `SPOTLDR true`, kernel marker `true` |
+| Spotlight PE host tests | 59 installer tests green |
+
+---
+
 ## [Unreleased] — 91-SSN surface, object namespace, I/O completion, direct VM access (2026-11-27)
 
 ### Added

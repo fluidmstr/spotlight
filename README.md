@@ -11,8 +11,8 @@
 
 ![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-68%25%20·%20M4-2ea043?style=flat-square)
 ![Spotlight X](https://img.shields.io/badge/Spotlight%20X-5%25-lightgrey?style=flat-square)
-![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-6%25-lightgrey?style=flat-square)
-![Spotlight](https://img.shields.io/badge/Spotlight%20project-39%25-orange?style=flat-square)
+![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-8%25-lightgrey?style=flat-square)
+![Spotlight](https://img.shields.io/badge/Spotlight%20project-40%25-orange?style=flat-square)
 ![ABI](https://img.shields.io/badge/ABI-Windows%2010%20x64%2019045-0078d4?style=flat-square)
 ![Language](https://img.shields.io/badge/language-V-4f7396?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--2.0--or--later-blue?style=flat-square)
@@ -21,8 +21,8 @@
 ```
 Spotlight NT     ██████████████░░░░░░  68%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 52%, M6 93%, M10 35%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro — skeleton + specs
-Spotlight PE     █░░░░░░░░░░░░░░░░░░░   6%   installer core host-tested, no bootable PE yet
-Spotlight        ████████░░░░░░░░░░░░  39%   the project as a product (target: L3)
+Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core host-tested; file-backed apply path
+Spotlight        ████████░░░░░░░░░░░░  40%   the project as a product (target: L3)
 ```
 
 </div>
@@ -55,8 +55,8 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 |---|---|---|---|---|
 | **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **68%** (M0–M2 ✅, M3 75%, M4 65%, M5 52%, M6 93%, M10 35%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 91 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, PE32+ loader with IAT/TEB/PEB/process CR3, polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, rename and delete-on-close, file disposition modes and FAT32 subdirectory paths, event/mutant/semaphore/timer objects with named opens, single- and multi-object waits, object namespace (`\KnownDlls`, `\BaseNamedObjects`, directory and symbolic-link objects), I/O completion ports, direct virtual-memory read/write, in-memory registry, token queries and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle/APC; M6: blocking waits and broader dispatch; M8: hives; M10: ext4, partial/async flush, write-back cache, nested-path creation |
 | **Spotlight X** | userland, Win32 layer, GUI, distro | **5%** (skeleton + specs) | repository layout, architecture and app-compatibility plans | ntdll and PE loader behind syscalls (needs L1) |
-| **Spotlight PE** | installer / recovery environment | **6%** (docs + host-tested installer core) | repo, subsystem docs, `mk/build.vsh`, installer state machine, durable journal, dry-run mock-disk executor, boot-image builder (all host-tested); no bootable PE environment yet | console/explorer on the kernel, real disk adapter, installer flow |
-| **Spotlight** | the project as a product | **39%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
+| **Spotlight PE** | installer / recovery environment | **8%** (docs + host-tested installer core) | repo, subsystem docs, `mk/build.vsh`, installer state machine, durable journal, dry-run mock-disk executor, deterministic GPT/FAT32 image builder with our boot artifacts, and a file-backed apply path (GPT primary/backup, FAT32 ESP, payload copy, read-back, journal); still no PE userland/console or interactive installer | console/explorer on the kernel, real disk adapter, interactive installer flow |
+| **Spotlight** | the project as a product | **40%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
 
 > The kernel is ahead of the OS. That is expected: userland and the installer need
 > a broad, stable syscall surface, not a handful of handlers.
@@ -140,6 +140,9 @@ And the machine itself proves the rest:
 
 ### Recent kernel progress (2026-11-27)
 
+* **Boot chain**: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which loads
+  `ntoskrnl.exe`; the kernel reaches HAL initialization under QEMU/OVMF. The
+  smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `true`.
 * **91 NT syscalls / 91 SSNs** registered (up from 74): file I/O
   (`NtCreateFile`, `NtReadFile`,
   `NtWriteFile`, `NtQueryInformationFile`, `NtSetInformationFile`,
@@ -231,7 +234,7 @@ Windows `.exe` (L3), no ntdll/Win32/GUI, no installer, no APC delivery, no
 blocking scheduler waits, no real process creation, no SMP, and no COW or
 pagefile. Nested-path file creation and writes are not implemented.
 
-What this means: our own UEFI loader reads a PE32+ kernel, allocates pages, applies
+What this means: our own UEFI boot manager chain-loads our loader, which reads a PE32+ kernel, allocates pages, applies
 relocations, exits boot services, builds its own page tables, switches CR3, installs
 a kernel stack and enters `KiSystemStartup`. The kernel brings up COM1, GDT, TSS,
 IDT, exception handling, the per-CPU GS base, hardware interrupts, the first
@@ -284,10 +287,10 @@ processes and system calls.
 
 | | Spotlight X | Spotlight PE |
 |---|---|---|
-| **Today** | userland/distro skeleton, architecture and compatibility docs, app-corpus format | installer/recovery design, console/explorer/installer contracts, host-tested installer core (state machine, journal, dry-run executor) and boot-image builder |
+| **Today** | userland/distro skeleton, architecture and compatibility docs, app-corpus format | installer/recovery design, console/explorer/installer contracts, host-tested installer core (state machine, journal, dry-run executor), deterministic GPT/FAT32 image builder with our boot artifacts, and a file-backed apply path |
 | **Blocked on** | syscalls (L1) and object manager (M5) | the same, plus storage (M10) and the X image format |
 | **Next** | ntdll skeleton and PE loader behind `Nt*` stubs | console over COM1/framebuffer once ring 3 exists |
-| **Progress** | 5% | 6% |
+| **Progress** | 5% | 8% |
 
 ### Not a Windows clone
 
@@ -309,7 +312,7 @@ choices:
 * Details: ADR-0010 (namespace/filesystems), ADR-0011 (graphics), ADR-0012
   (session fallback) in `spotlight-nt/docs/adr/`.
 
-That is why the overall project sits at 39% while the kernel is at 68%: the OS
+That is why the overall project sits at 40% while the kernel is at 68%: the OS
 needs the kernel to finish first, not the other way around.
 
 ---

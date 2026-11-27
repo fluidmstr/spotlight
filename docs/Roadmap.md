@@ -24,8 +24,12 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  ███████████████████████████████░░░░░░░░░░░░░  kernel 68% · project 39%
+Overall  ███████████████████████████████░░░░░░░░░░░░░  kernel 68% · project 40% · PE 8%
 ```
+
+The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
+loads `ntoskrnl.exe`; the kernel reaches HAL initialization under QEMU/OVMF, and
+the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `true`.
 
 | Stage | Scope | State |
 |---|---|---|

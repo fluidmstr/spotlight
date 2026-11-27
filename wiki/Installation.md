@@ -160,8 +160,10 @@ non-zero exit code if the marker is missing.
 * No desktop, no shell, no file manager.
 * No `.exe` support. That is L3 and it is far away — see
   [Compatibility](Compatibility.md).
-* No install to a physical disk. The installer environment (Spotlight PE) exists
-  as a repository and a plan, not as a working image.
+* No install to a physical disk. The installer environment (Spotlight PE) is 8%:
+  its host-tested installer core, deterministic GPT/FAT32 image builder and
+  file-backed apply path exist, but there is no PE userland, console or working
+  install image yet.
 
 If a guide on the internet promises otherwise, it is not about this project.
 

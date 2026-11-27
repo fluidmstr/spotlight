@@ -8,14 +8,15 @@
 
 ```
 UEFI firmware
-  └─ SPOTBOOT.EFI        boot manager: menu, config, chainload          (planned)
+  └─ SPOTBOOT.EFI        boot manager: menu, config, chain-loads the loader
        └─ SPOTLDR.EFI    loader: PE32+, paging, ExitBootServices
             └─ ntoskrnl.exe  Spotlight NT
                  └─ Spotlight X userland (ntdll, Win32, GUI)
 ```
 
-Today `SPOTLDR.EFI` is started directly as `\EFI\BOOT\BOOTX64.EFI`. The boot
-manager is designed but not implemented.
+`SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which loads the kernel; the chain
+completes through HAL initialization in QEMU/OVMF (`SPOTBOOT true`,
+`SPOTLDR true`, kernel marker `true`).
 
 ### What the loader does
 

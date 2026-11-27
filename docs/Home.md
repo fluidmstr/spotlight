@@ -7,15 +7,17 @@
 ```
 Spotlight NT     ██████████████░░░░░░  68%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 52%, M6 93%, M10 35%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro
-Spotlight PE     █░░░░░░░░░░░░░░░░░░░   6%   installer core host-tested; no bootable PE yet
-Spotlight        ████████░░░░░░░░░░░░  39%   the project as a product (target: L3)
+Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core host-tested; file-backed apply path
+Spotlight        ████████░░░░░░░░░░░░  40%   the project as a product (target: L3)
 ```
 
 **Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 52%, M6 at
-93% and M10 at 35%. Our own UEFI loader boots a PE32+ kernel written in V, exits
-boot services, builds identity page tables and enters `KiSystemStartup`. The
-kernel brings up COM1, GDT/TSS/IDT, exception handling, KPCR, hardware
-interrupts, a bugcheck path, ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, a
+93% and M10 at 35%. Our own UEFI boot manager chain-loads our loader, which boots
+a PE32+ kernel written in V, exits boot services, builds identity page tables and
+enters `KiSystemStartup`; the QEMU smoke run reports `SPOTBOOT true`,
+`SPOTLDR true` and the kernel marker `true`. The kernel brings up COM1, GDT/TSS/IDT,
+exception handling, KPCR, hardware interrupts, a bugcheck path, ACPI/MADT,
+LAPIC/IOAPIC, IRQL, spinlocks, a
 calibrated LAPIC timer replacing the 8259/PIT, one IOAPIC line routed end-to-end
 and PCI bus enumeration. It maps anonymous, file-backed and `SEC_IMAGE` NT
 sections with demand paging, runs a preemptive round-robin scheduler, and loads
@@ -26,6 +28,12 @@ disk. The kernel also has event, mutant, semaphore and timer objects with named
 opens, finite timed and multi-object waits, an object namespace with directory
 and symbolic-link objects, I/O completion ports, direct virtual-memory
 read/write, an in-memory registry, timed delays and an NTFS parser.
+
+**Spotlight PE:** 8% — host-tested installer core (59 tests), durable journal,
+dry-run executor, deterministic GPT/FAT32 image builder with our boot artifacts,
+and a file-backed apply path (GPT primary/backup, FAT32 ESP, payload copy,
+read-back, journal). There is still no PE userland, console or interactive
+installer.
 
 **Recent kernel progress:** 91 NT syscalls, up from 74: file and path-based
 attribute queries (including rename via `FileRenameInformation`,
@@ -58,8 +66,9 @@ Also: a CPL3 PE image making a multi-argument `SYSCALL` including stack argument
 whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT sections with demand
 paging, and a user VA allocator above 8 GiB. 25 QEMU test targets plus the host
 FAT32 and unit suites are green. There is no real Windows `.exe` (L3),
-ntdll/Win32/GUI, installer, real process creation, SMP, or COW/pagefile yet;
-nested-path file creation and writes are not implemented.
+ntdll/Win32/GUI, PE userland/console or interactive installer, real process
+creation, SMP, or COW/pagefile yet; nested-path file creation and writes are not
+implemented.
 
 ---
 
@@ -85,10 +94,14 @@ nested-path file creation and writes are not implemented.
 
 ```
 UEFI firmware
-  └─ SPOTLDR.EFI      reads ntoskrnl.exe from the ESP, PE32+, relocations
-       └─ ntoskrnl.exe   KiSystemStartup: COM1, GDT/TSS/IDT, KPCR, bugcheck
-            └─ (self-tests, then halts)
+  └─ SPOTBOOT.EFI     boot manager: menu, config, chain-loads the loader
+       └─ SPOTLDR.EFI      reads ntoskrnl.exe from the ESP, PE32+, relocations
+            └─ ntoskrnl.exe   KiSystemStartup: COM1, GDT/TSS/IDT, KPCR, bugcheck
+                 └─ (self-tests, then halts)
 ```
+
+The QEMU smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker
+`true`.
 
 Proof, straight from QEMU:
 
