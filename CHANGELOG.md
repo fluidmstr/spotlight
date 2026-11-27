@@ -36,14 +36,15 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] — scales refreshed, boot chain and PE apply path (2026-11-27)
+## [Unreleased] — APC delivery, boot chain, PE apply path and refreshed scales (2026-11-27)
 
 ### Changed
 
-- **Readiness scales:** Spotlight PE **6% → 8%**, the project overall
-  **39% → 40%**. Spotlight NT stays **68%**, Spotlight X stays **5%**, and the
-  milestones are unchanged: M0–M2 100%, M3 75%, M4 65%, M5 52%, M6 93%,
-  M10 35%, all others 0%.
+- **Readiness scales:** Spotlight NT **68% → 69%**, Spotlight PE **6% → 8%**, the
+  project overall **39% → 41%**, Spotlight X stays **5%**. Milestones: M0–M2 100%,
+  M3 75%, M4 65%, M5 **52% → 55%**, M6 **93% → 94%**, M10 35%, all others 0%.
+- **APC delivery:** `NtQueueApcThread` queues user APCs; `NtTestAlert` or an alertable wait delivers
+  them through a ring-3 trampoline (`test-apc`), restoring RAX/RBP and resuming the interrupted RIP.
 - **Boot chain:** `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, `SPOTLDR` loads
   `ntoskrnl.exe`, and the kernel reaches HAL initialization under QEMU/OVMF.
 - **Spotlight PE:** documented the host-tested installer core (59 tests), the
