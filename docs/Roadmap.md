@@ -12,8 +12,8 @@ M0  ████████████████████ 100%   ✅
 M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
-M4  █████████████░░░░░░░  65%
-M5  ████████████░░░░░░░░  75%
+M4  ██████████████░░░░░  70%
+M5  █████████████████░░░  85%
 M6  ███████████████████░  99%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
@@ -24,7 +24,7 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░  10%
 
-Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 79% · X 12% · project 50% · PE 10%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 82% · X 12% · project 52% · PE 11%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -37,8 +37,8 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 | **M1** | loader, PE32+, `ExitBootServices`, own CR3, handoff | ✅ |
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
-| **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 65% |
-| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 75% |
+| **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 70% |
+| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 85% |
 | **M6** | syscalls, ring-3 process, dispatch | 🟡 99% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
@@ -91,10 +91,10 @@ Remaining:
 
 Done:
 
-* **M4 (65%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
+* **M4 (70%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
   page-fault handling, anonymous, file-backed and `SEC_IMAGE` NT sections with
   demand paging, and a user VA allocator above 8 GiB.
-* **M5 (75%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
+* **M5 (85%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, preemptive round-robin driven by the LAPIC timer, reference-counted
   handle duplication (`NtDuplicateObject`), thread/process termination plus
   alert state (`test-exit`), user APC delivery through a ring-3 trampoline
@@ -103,7 +103,11 @@ Done:
   and a ring-3 entry; `test-thread-create`), and thread exit through the kind-12
   handle (`NtTerminateThread` records the exit code and dequeues; a
   non-consumptive wait returns immediately after exit; `ThreadBasicInformation`
-  reports `ExitStatus`/`UniqueThread`; `test-thread-exit`).
+  reports `ExitStatus`/`UniqueThread`; `test-thread-exit`). The internal
+  executable-child bootstrap creates a child PML4 and initial thread, completes
+  parent → child → parent with process-aware CR3/PID/PEB/TSS/GS publication,
+  and verifies rollback plus page/table/slot cleanup (`test-exec-process`);
+  public `NtCreateProcess` remains object-only.
 * **M6 (99%)**: SYSCALL entry with stack arguments, 96 NT handlers covering
   file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
   rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
@@ -155,10 +159,10 @@ Remaining:
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
-`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-exit`, `test-registry`,
+`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-exec-process`, `test-exit`, `test-registry`,
 `test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc`,
 `test-thread-create`, `test-thread-exit` and the host unit/FAT32
-suites are green (2026-11-28) — 32 QEMU test targets in total.
+suites are green (2026-11-28) — 33 QEMU test targets in total.
 
 ---
 

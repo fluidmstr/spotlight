@@ -158,12 +158,13 @@ non-zero exit code if the marker is missing.
 ## 7. What you will not get (yet)
 
 * No desktop, no shell, no file manager.
-* No `.exe` support. That is L3 and it is far away — see
+* No third-party Windows `.exe` support. That is L3 and it is far away — see
   [Compatibility](Compatibility.md).
-* No install to a physical disk. The installer environment (Spotlight PE) is 10%:
+* No install to a physical disk. The installer environment (Spotlight PE) is 11%:
   its host-tested installer core, deterministic GPT/FAT32 image builder and
-  file-backed apply path exist, but there is no PE userland, console or working
-  install image yet.
+  file-backed apply path exist. Built-in images and ISOs carry the freestanding
+  `\SPOTPE\INIT.EXE` diagnostic seed, but no boot stage launches it and there is
+  no PE userland session or working physical-disk installer yet.
 
 If a guide on the internet promises otherwise, it is not about this project.
 

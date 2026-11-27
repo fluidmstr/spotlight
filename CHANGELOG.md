@@ -7,7 +7,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] - X hello process launch, APC GPR restore, ntdll and installer plans (2026-11-28)
+## [Unreleased] - NT 82%, executable child round-trip and PE diagnostic seed (2026-11-28)
 
 ### Added
 
@@ -26,7 +26,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
   covers the pre-exit wait timeout, terminate, dequeue, immediate post-exit
   wait and the query. `ps` publishes the lifecycle callbacks so `ke` stays
   `ps`-free; a late-SSN audit in `main` runs after `ps_init`
-  (`syscall-slot-missing`), and `tests/abi/syscall_ssn_test.v` locks the 95
+  (`syscall-slot-missing`), and `tests/abi/syscall_ssn_test.v` locks the 96
   documented SSN rows against the 19045 table.
 
 ### Changed
@@ -40,9 +40,9 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 - **Bootstrap media.** X builds a tested GPT/FAT32 image that boots to HAL init;
   PE adds file-backed rollback, host `spotpe-init`, and unsigned ISO 9660/El
   Torito media that also boots to the kernel. Neither runs a userland session yet.
-- **ntdll syscall surface.** X generates 95 naked x64 trampolines, an SSN table and PE exports
+- **ntdll syscall surface.** X generates 96 naked x64 trampolines, an SSN table and PE exports
   from the kernel constants plus the 19045 CSV, links `ntdll.dll`, and validates every export and
-  11-byte stub on the host (3494 assertions). No loader or process calls it yet.
+  11-byte stub on the host (3530 assertions). No loader or process calls it yet.
 - **APC GPR restore.** `SYSRET` now starts at an aligned delivery frame; the
   trampoline calls the APC with Win64 shadow space and restores `RAX` (NTSTATUS),
   `RBP`, `RDX`, `R8`, `R9` and `R10` before the saved RIP. `test-apc` proves every
@@ -50,7 +50,8 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 - **X `hello.exe` process launch.** `test-x-hello` reads `\X\hello.exe` through
   AHCI + the nested FAT32 path, creates a separate DTB/TEB/PEB/user-stack context,
   and executes `NtQuerySystemTime` plus the `XELL` marker at CPL3 (`x-hello-ok`).
-  This closes L1 for our own PE; third-party L3 and `NtCreateProcess` remain.
+  This closes L1 for our own PE; third-party L3 and public executable process
+  creation remain, and `NtCreateProcess` remains object-only.
 - **PE unattended plans.** A deterministic answer-file v1 parser normalizes and
   validates unattended installs through the existing State plan/digest path.
   14 answer tests include license-false zero-write/no-applier proofs; the merged
@@ -66,11 +67,17 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
   objects from an eight-slot pool with monotonic PIDs, query/wait/terminate/close and duplicate
   reference semantics. It does not create an address space or thread; `test-process` proves the
   lifecycle and caller CR3/TSS preservation.
-- **Readiness scales:** Spotlight NT **72% → 79%** (M5 **60% → 75%**,
-  M6 **95% → 99%**), the project overall **44% → 50%**, Spotlight X **5% → 12%**,
-  Spotlight PE **8% → 10%**; M0–M2 100%, M3 75%, M4 65%, M10 37%, M11 5%, M14 10%, all
-  others 0%.
-- **Tests:** 32 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`).
+- **Executable child round-trip.** `test-exec-process` builds a child PML4 and initial thread,
+  switches parent → child → parent with CR3/PID/PEB/TSS/GS publication, executes the X hello
+  syscalls, and verifies rollback plus leaf-page/page-table/dynamic-slot cleanup. This is an
+  internal bootstrap, not public executable `NtCreateProcess`/`NtCreateUserProcess`.
+- **PE diagnostic seed.** PE builds a freestanding AMD64 PE32+ `INIT.EXE` that probes
+  `NtQuerySystemTime`, emits the `PEP1` marker through SSN 0 and loops. Built-in images and ISOs
+  carry it at `\SPOTPE\INIT.EXE`, but no boot stage launches it and there is no PE session.
+- **Readiness scales:** Spotlight NT **82%** (M4 **70%**, M5 **85%**, M6 **99%**),
+  the project overall **52%**, Spotlight X **12%**, Spotlight PE **11%**;
+  M0–M2 100%, M3 75%, M10 37%, M11 5%, M14 10%, all others 0%.
+- **Tests:** 33 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process` and `test-exec-process`).
 
 ### Verified
 
@@ -87,7 +94,9 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 | `tests/abi` | 7 suites: SSN/status/layout/list/RTL/OBJECT_HEADER/PS checks |
 | X `test-ntdll` | 96 exports/stubs; 3530 table/CSV/kernel-constant/byte assertions |
 | `test-process` | kind-13 create/query/wait/terminate/close, pool/PID and CR3/TSS checks |
-| `test` (host) | ABI/SSN suite green, 95 SSN rows |
+| `test-exec-process` | child PML4 + initial thread → parent → child → parent; rollback/restore/cleanup counters |
+| PE `test-payload` | AMD64 PE32+ seed, no imports/runtime, exact time/`PEP1` syscall bytes; carried, not launched |
+| `test` (host) | ABI/SSN suite green, 96 SSN rows |
 
 ---
 
