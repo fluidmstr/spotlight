@@ -6,7 +6,7 @@
 
 ```
 Spotlight NT     ██████████████░░░░░░  74%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 65%, M6 96%, M10 37%
-Spotlight X      █░░░░░░░░░░░░░░░░░░░   7%   bootstrap GPT/FAT32 image; userland skeleton
+Spotlight X      █░░░░░░░░░░░░░░░░░░░   8%   bootstrap image + 95 host-validated ntdll stubs
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core, rollback, host console, ISO
 Spotlight        ████████░░░░░░░░░░░░  45%   the project as a product (target: L3)
 ```
@@ -31,6 +31,11 @@ opens, scheduler-blocking finite timed and multi-object waits, an object namespa
 and symbolic-link objects, I/O completion ports, direct virtual-memory
 read/write, user APC delivery through a ring-3 trampoline, an in-memory registry,
 timed delays and an NTFS parser.
+
+**Spotlight X:** 8% — a deterministic GPT/FAT32 bootstrap image boots to kernel HAL init, and a
+linked `ntdll.dll` exposes 95 generated syscall trampolines validated by 3494 host assertions.
+There is still no loader, heap, RTL/SEH/TLS, Win32, GUI or process caller; `hello.exe` is stored in
+the image but not launched.
 
 **Spotlight PE:** 8% — host-tested installer core (69 installer tests + 13 image tests + 11 ISO tests),
 durable journal, dry-run executor, deterministic GPT/FAT32 image builder with our boot artifacts,
@@ -153,8 +158,8 @@ I [serial] loopback self-test passed
 Self-tests: `test-boot` (38/38 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`),
 `test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush, rename, delete-on-close, subdirectory paths, DOS creation/write timestamps),
 `test-section` (NT sections), `test-event` (named events), `test-namespace` (directory/symbolic-link objects), `test-iocp` (I/O completion),
-`test-sync` (finite timed single- and multi-object waits), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-thread-exit` (exit, dequeue, post-exit wait and query), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
-`test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 28 QEMU test targets in total.
+`test-sync` (scheduler-blocking finite timed single- and multi-object waits), `test-blocking-wait` (zero polls, signal/timeout resume), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-thread-exit` (exit, dequeue, post-exit wait and query), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
+`test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 29 QEMU test targets in total.
 
 ---
 

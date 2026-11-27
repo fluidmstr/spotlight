@@ -13,18 +13,18 @@ M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
 M4  █████████████░░░░░░░  65%
-M5  ████████████░░░░░░░░  60%
-M6  ███████████████████░  95%
+M5  ████████████░░░░░░░░  65%
+M6  ███████████████████░  96%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
 M9  ░░░░░░░░░░░░░░░░░░░░   0%
 M10 ███████░░░░░░░░░░░░░  37%
-M11 ░░░░░░░░░░░░░░░░░░░░   0%
+M11 ░░░░░░░░░░░░░░░░░░░░   5%
 M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
-M14 ░░░░░░░░░░░░░░░░░░░░   0%
+M14 ░░░░░░░░░░░░░░░░░░░░   5%
 
-Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 74% · project 45% · PE 8%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 74% · X 8% · project 45% · PE 8%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -38,16 +38,16 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
 | **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 65% |
-| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 60% |
-| **M6** | syscalls, ring-3 process, dispatch | 🟡 95% |
+| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 65% |
+| **M6** | syscalls, ring-3 process, dispatch | 🟡 96% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
 | **M10** | storage, NTFS, Cc | 🟡 37% |
-| **M11** | ntdll, ALPC, console | ⬜ |
+| **M11** | ntdll, ALPC, console | 🟡 5% — 95 host-validated syscall stubs; no loader/process |
 | **M12** | Win32 layer, `.exe` corpus → **L3** | ⬜ |
 | **M13** | Track A: real MS drivers and userland | 🔬 |
-| **M14** | Spotlight X 1.0: image, installer | ⬜ |
+| **M14** | Spotlight X 1.0: image, installer | 🟡 5% — bootstrap GPT/FAT32 image boots to HAL init |
 
 ### M2, in detail — closed
 
@@ -153,7 +153,7 @@ Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
 `test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-exit`, `test-registry`,
 `test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc`,
 `test-thread-create`, `test-thread-exit` and the host unit/FAT32
-suites are green (2026-11-27) — 28 QEMU test targets in total.
+suites are green (2026-11-28) — 29 QEMU test targets in total.
 
 ---
 
