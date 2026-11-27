@@ -16,7 +16,7 @@
 | Windows userland | ❌ |
 
 There is no compatibility layer hiding in the repository. The kernel prints its
-boot log on COM1, exercises 44 NT syscalls, runs a CPL3 PE32+ test image and then
+boot log on COM1, exercises 48 NT syscalls, runs a CPL3 PE32+ test image and then
 halts. The compatibility layers, userland and application corpus are still ahead.
 
 ---
