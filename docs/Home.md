@@ -5,14 +5,14 @@
 ---
 
 ```
-Spotlight NT     ███████████░░░░░░░░░  57%   kernel: M0–M2 closed, M3 75%, M4 55%, M5 35%, M6 85%, M10 20%
+Spotlight NT     ████████████░░░░░░░░  62%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 45%, M6 90%, M10 30%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   5%   installer environment
-Spotlight        ███████░░░░░░░░░░░░░  33%   the project as a product (target: L3)
+Spotlight        ███████░░░░░░░░░░░░░  36%   the project as a product (target: L3)
 ```
 
-**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 55%, M5 at 35%, M6 at
-85% and M10 at 20%. Our own UEFI loader boots a PE32+ kernel written in V, exits
+**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 45%, M6 at
+90% and M10 at 30%. Our own UEFI loader boots a PE32+ kernel written in V, exits
 boot services, builds identity page tables and enters `KiSystemStartup`. The
 kernel brings up COM1, GDT/TSS/IDT, exception handling, KPCR, hardware
 interrupts, a bugcheck path, ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, a
@@ -24,7 +24,7 @@ as a published VFS volume; `NtWriteFile` writes through to the cached volume and
 `NtFlushBuffersFile` synchronously flushes the whole 64 KiB image to the SATA
 disk. The kernel also has event objects, timed delays and an NTFS parser.
 
-**Recent kernel progress:** 48 NT syscalls (file and path-based attribute queries, memory, event, mutant, semaphore and timer objects, timing and thread
+**Recent kernel progress:** 51 NT syscalls (file and path-based attribute queries, memory, event, mutant, semaphore and timer objects, token queries for classes 8/10/18/20, timing and thread
 information, current-process/thread handle opens, timer resolution and
 instruction-cache flush), a CPL3 PE image making a multi-argument `SYSCALL` including stack
 arguments (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a

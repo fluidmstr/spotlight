@@ -12,19 +12,19 @@ M0  ████████████████████ 100%   ✅
 M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
-M4  ███████████░░░░░░░░░  55%
-M5  ███████░░░░░░░░░░░░░  35%
-M6  █████████████████░░░  85%
+M4  █████████████░░░░░░░  65%
+M5  █████████░░░░░░░░░░░  45%
+M6  ██████████████████░░  90%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
 M9  ░░░░░░░░░░░░░░░░░░░░   0%
-M10 ████░░░░░░░░░░░░░░░░  20%
+M10 ██████░░░░░░░░░░░░░░  30%
 M11 ░░░░░░░░░░░░░░░░░░░░   0%
 M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  ███████████████████████░░░░░░░░░░░░░░░░░  kernel 57% · project 33%
+Overall  █████████████████████████░░░░░░░░░░░░░░░░  kernel 62% · project 36%
 ```
 
 | Stage | Scope | State |
@@ -33,13 +33,13 @@ Overall  ███████████████████████�
 | **M1** | loader, PE32+, `ExitBootServices`, own CR3, handoff | ✅ |
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
-| **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 55% |
-| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 35% |
-| **M6** | syscalls, ring-3 process, dispatch | 🟡 85% |
+| **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 65% |
+| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 45% |
+| **M6** | syscalls, ring-3 process, dispatch | 🟡 90% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
-| **M10** | storage, NTFS, Cc | 🟡 20% |
+| **M10** | storage, NTFS, Cc | 🟡 30% |
 | **M11** | ntdll, ALPC, console | ⬜ |
 | **M12** | Win32 layer, `.exe` corpus → **L3** | ⬜ |
 | **M13** | Track A: real MS drivers and userland | 🔬 |
@@ -87,19 +87,20 @@ Remaining:
 
 Done:
 
-* **M4 (55%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
+* **M4 (65%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
   page-fault handling, anonymous, file-backed and `SEC_IMAGE` NT sections with
   demand paging, and a user VA allocator above 8 GiB.
-* **M5 (35%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
+* **M5 (45%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, and preemptive round-robin driven by the LAPIC timer.
-* **M6 (85%)**: SYSCALL entry with stack arguments, 48 NT handlers covering
-  file (incl. path-based attribute queries), memory, event, mutant, semaphore, timer, object, time, process/system and thread queries, plus
-  pseudo-handle opens, timer resolution and instruction-cache flush; PE32+ loader with
-  IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers signaled and zero-timeout
-  waits, acquires an unowned mutant or one owned by the current thread,
-  decrements a positive semaphore count and fires on timer expiry;
+* **M6 (90%)**: SYSCALL entry with stack arguments, 51 NT handlers covering
+  file (incl. path-based attribute queries), memory, event, mutant, semaphore,
+  timer, object, time, token, thread, process and system queries, plus
+  pseudo-handle opens, timer resolution and instruction-cache flush; PE32+
+  loader with IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers signaled and
+  zero-timeout waits, acquires an unowned mutant or one owned by the current
+  thread, decrements a positive semaphore count and fires on timer expiry;
   blocking waits return `STATUS_NOT_IMPLEMENTED`.
-* **M10 (20%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32
+* **M10 (30%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32
   read and in-place write, a published VFS volume over a 64 KiB disk image, write
   through the cached volume, `NtFlushBuffersFile` synchronously flushing the whole
   image to disk (`test-flush`), and the NTFS parser.

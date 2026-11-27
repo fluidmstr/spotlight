@@ -8,7 +8,7 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ### Added
 
-- **48 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+- **51 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
   `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27,
   `NtQueryAttributesFile` 0x3d, `NtQueryFullAttributesFile` 0x147,
   `NtFlushBuffersFile` 0x4b, `NtQueryDirectoryFile` 0x35.
@@ -36,6 +36,9 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   `NtSetTimer` 0x62 (relative 100 ns due time, optional period),
   `NtCancelTimer` 0x61 (returns the previous state) and
   `NtQueryTimer` 0x38 (`TimerBasicInformation`: remaining time, state).
+  Tokens: `NtOpenProcessToken` 0x129, `NtOpenProcessTokenEx` 0x30 and
+  `NtQueryInformationToken` 0x21 (classes 8/10/18/20 return `TokenPrimary`,
+  `TokenStatistics`, `TokenElevationTypeDefault` and a not-elevated state).
   Cache: `NtFlushInstructionCache` 0xe9 (validated
   no-op; x86 I-cache is coherent). Threads:
   `NtSetInformationThread` 0x0d, `NtQueryInformationThread` 0x25.
@@ -46,7 +49,10 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 - **Info-class coverage.** `NtQueryInformationFile` accepts file classes 4–9, 14,
   16, 17, 21, 22, 34, 35 and 39; `NtQueryInformationProcess` accepts 0, 2, 3, 4,
   5, 7, 12, 18, 20–22, 24–34, 36 and 43; `NtQuerySystemInformation` accepts 0, 1,
-  3, 5, 7, 8, 9, 23, 35 and 103. `NtSetInformationFile` class 4
+  3, 5, 7, 8, 9, 23, 35 and 103; `NtQueryInformationToken` accepts 8, 10, 18
+  and 20 (`TokenType`/`TokenPrimary`, `TokenStatistics`,
+  `TokenElevationType`/`TokenElevationTypeDefault`, `TokenElevation`/not
+  elevated). `NtSetInformationFile` class 4
   (`FileBasicInformation`) updates mutable file attributes.
 - **Storage**: polling AHCI (`READ DMA`/`WRITE DMA`, SPOTFAT port selection),
   FAT32 read and in-place write, and a published VFS volume over a 64 KiB disk
