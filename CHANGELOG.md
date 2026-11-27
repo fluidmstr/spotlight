@@ -8,7 +8,7 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ### Added
 
-- **41 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
+- **44 NT syscalls.** File: `NtCreateFile` 0x55, `NtReadFile` 0x06,
   `NtWriteFile` 0x08, `NtQueryInformationFile` 0x11, `NtSetInformationFile` 0x27,
   `NtQueryAttributesFile` 0x3d, `NtQueryFullAttributesFile` 0x147,
   `NtFlushBuffersFile` 0x4b, `NtQueryDirectoryFile` 0x35.
@@ -29,12 +29,15 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
   current pseudo-handles). Mutants: `NtCreateMutant` 0xb4 (optional initial
   owner), `NtReleaseMutant` 0x20 (returns the previous count) and
   `NtQueryMutant` 0x156 (`MutantBasicInformation`: count, owned-by-caller,
-  abandoned). Cache: `NtFlushInstructionCache` 0xe9 (validated
+  abandoned). Semaphores: `NtReleaseSemaphore` 0x0a (returns the previous
+  count), `NtCreateSemaphore` 0xc0 (initial/maximum count) and
+  `NtQuerySemaphore` 0x15e (`SemaphoreBasicInformation`: current/maximum).
+  Cache: `NtFlushInstructionCache` 0xe9 (validated
   no-op; x86 I-cache is coherent). Threads:
   `NtSetInformationThread` 0x0d, `NtQueryInformationThread` 0x25.
-  `NtWaitForSingleObject` covers signaled and zero-timeout waits and acquires an
-  unowned mutant or one owned by the current thread; blocking waits
-  return `STATUS_NOT_IMPLEMENTED`.
+  `NtWaitForSingleObject` covers signaled and zero-timeout waits, acquires an
+  unowned mutant or one owned by the current thread, and decrements a positive
+  semaphore count; blocking waits return `STATUS_NOT_IMPLEMENTED`.
 - **Info-class coverage.** `NtQueryInformationFile` accepts file classes 4–9, 14,
   16, 17, 21, 22, 34, 35 and 39; `NtQueryInformationProcess` accepts 0, 2, 3, 4,
   5, 7, 12, 18, 20–22, 24–34, 36 and 43; `NtQuerySystemInformation` accepts 0, 1,
