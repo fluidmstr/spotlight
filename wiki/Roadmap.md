@@ -14,7 +14,7 @@ M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
 M4  █████████████░░░░░░░  65%
 M5  ████████████░░░░░░░░  65%
-M6  ███████████████████░  96%
+M6  ███████████████████░  97%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
 M9  ░░░░░░░░░░░░░░░░░░░░   0%
@@ -24,7 +24,7 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   5%
 
-Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 74% · X 8% · project 45% · PE 8%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 75% · X 8% · project 46% · PE 8%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -39,7 +39,7 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
 | **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 65% |
 | **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 65% |
-| **M6** | syscalls, ring-3 process, dispatch | 🟡 96% |
+| **M6** | syscalls, ring-3 process, dispatch | 🟡 97% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
@@ -104,7 +104,7 @@ Done:
   handle (`NtTerminateThread` records the exit code and dequeues; a
   non-consumptive wait returns immediately after exit; `ThreadBasicInformation`
   reports `ExitStatus`/`UniqueThread`; `test-thread-exit`).
-* **M6 (96%)**: SYSCALL entry with stack arguments, 95 NT handlers covering
+* **M6 (97%)**: SYSCALL entry with stack arguments, 95 NT handlers covering
   file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
   rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
   `NtWriteVirtualMemory`, lock/unlock/flush), event, mutant, semaphore and timer
@@ -123,7 +123,8 @@ Done:
   or one owned by the current thread, decrement a positive semaphore count and
   fire on timer expiry. User APCs are
   delivered (`NtQueueApcThread` 0x45 → `NtTestAlert`/alertable wait → ring-3
-  trampoline) but only `RAX`/`RBP` are restored. `NtCreateThreadEx` 0xc2 creates
+  trampoline) with `RAX` (NTSTATUS), `RBP`, `RDX`, `R8`, `R9` and `R10` restored;
+  XMM/FPU and exception context are not saved. `NtCreateThreadEx` 0xc2 creates
   a thread with its own user stack and ETHREAD, inserts it into the ready queue
   and starts it at CPL3 (`test-thread-create`); its kind-12 handle then supports
   exit/dequeue, post-exit wait and `ThreadBasicInformation`
@@ -146,7 +147,7 @@ Remaining:
 * M4: working sets, copy-on-write, section sharing.
 * M5: priorities and quantum, idle thread, scheduler-integrated APC, join/stack
   reclamation, per-thread TEB and TSS `RSP0`.
-* M6: full APC register-context save, remaining syscall semantics.
+* M6: APC FPU/exception-context save, remaining syscall semantics.
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,

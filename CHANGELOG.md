@@ -7,7 +7,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] - blocking waits, ABI checks, bootstrap images (2026-11-28)
+## [Unreleased] - APC GPR restore, blocking waits, ntdll and bootstrap media (2026-11-28)
 
 ### Added
 
@@ -43,8 +43,12 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 - **ntdll syscall surface.** X generates 95 naked x64 trampolines, an SSN table and PE exports
   from the kernel constants plus the 19045 CSV, links `ntdll.dll`, and validates every export and
   11-byte stub on the host (3494 assertions). No loader or process calls it yet.
-- **Readiness scales:** Spotlight NT **72% → 74%** (M5 **60% → 65%**,
-  M6 **95% → 96%**), the project overall **44% → 45%**, Spotlight X **5% → 8%**;
+- **APC GPR restore.** `SYSRET` now starts at an aligned delivery frame; the
+  trampoline calls the APC with Win64 shadow space and restores `RAX` (NTSTATUS),
+  `RBP`, `RDX`, `R8`, `R9` and `R10` before the saved RIP. `test-apc` proves every
+  value through a real `NtTestAlert` syscall. XMM/FPU and exception context remain.
+- **Readiness scales:** Spotlight NT **72% → 75%** (M5 **60% → 65%**,
+  M6 **95% → 97%**), the project overall **44% → 46%**, Spotlight X **5% → 8%**;
   Spotlight PE stays **8%**; M0–M2 100%, M3 75%, M4 65%, M10 37%, M11/M14 5%, all
   others 0%.
 - **Tests:** 29 QEMU targets (adds `test-thread-exit` and `test-blocking-wait`).
@@ -56,6 +60,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 | `test-file` | non-zero DOS creation/write timestamps through `FileBasicInformation` |
 | `test-thread-exit` | wait timeout, terminate, dequeue, wait 0, `ThreadBasicInformation` |
 | `test-blocking-wait` | block (0 polls), signal resume, timeout resume |
+| `test-apc` | real `NtTestAlert` delivery; RAX/RBP/RDX/R8/R9/R10 restore |
 | `tests/abi` | 7 suites: SSN/status/layout/list/RTL/OBJECT_HEADER/PS checks |
 | X `test-ntdll` | 95 exports/stubs; 3494 table/CSV/kernel-constant/byte assertions |
 | `test` (host) | ABI/SSN suite green, 95 SSN rows |

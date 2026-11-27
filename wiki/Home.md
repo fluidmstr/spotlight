@@ -5,14 +5,14 @@
 ---
 
 ```
-Spotlight NT     ██████████████░░░░░░  74%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 65%, M6 96%, M10 37%
+Spotlight NT     ██████████████░░░░░░  75%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 65%, M6 97%, M10 37%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░   8%   bootstrap image + 95 host-validated ntdll stubs
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core, rollback, host console, ISO
-Spotlight        ████████░░░░░░░░░░░░  45%   the project as a product (target: L3)
+Spotlight        ████████░░░░░░░░░░░░  46%   the project as a product (target: L3)
 ```
 
 **Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 65%, M6 at
-96% and M10 at 37%. Our own UEFI boot manager chain-loads our loader, which boots
+97% and M10 at 37%. Our own UEFI boot manager chain-loads our loader, which boots
 a PE32+ kernel written in V, exits boot services, builds identity page tables and
 enters `KiSystemStartup`; the QEMU smoke run reports `SPOTBOOT true`,
 `SPOTLDR true` and the kernel marker `true`. The kernel brings up COM1, GDT/TSS/IDT,
@@ -76,8 +76,8 @@ signaled and zero-timeout waits acquire an unowned mutant or one owned by the
 current thread, decrement a positive semaphore count and fire on timer expiry.
 `test-blocking-wait` observes zero poll iterations plus signal and timeout resume.
 Syscall numbers were re-checked against 19045, fixing `NtOpenThread` to 0x12f
-and `NtResetEvent` to 0x17a. APC delivery still restores only `RAX`/`RBP`, not
-the full volatile register context.
+and `NtResetEvent` to 0x17a. APC delivery restores `RAX` (NTSTATUS), `RBP`,
+`RDX`, `R8`, `R9` and `R10`; XMM/FPU and exception context are still missing.
 Also: a CPL3 PE image making a multi-argument `SYSCALL` including stack arguments
 (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a synchronous
 whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT sections with demand
