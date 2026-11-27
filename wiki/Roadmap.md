@@ -13,8 +13,8 @@ M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
 M4  █████████████░░░░░░░  65%
-M5  ███████████░░░░░░░░░  55%
-M6  ███████████████████░  94%
+M5  ████████████░░░░░░░░  58%
+M6  ███████████████████░  95%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
 M9  ░░░░░░░░░░░░░░░░░░░░   0%
@@ -24,7 +24,7 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  ███████████████████████████████░░░░░░░░░░░░░  kernel 69% · project 41% · PE 8%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 70% · project 42% · PE 8%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -38,8 +38,8 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
 | **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 65% |
-| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 55% |
-| **M6** | syscalls, ring-3 process, dispatch | 🟡 94% |
+| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 58% |
+| **M6** | syscalls, ring-3 process, dispatch | 🟡 95% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
@@ -94,12 +94,14 @@ Done:
 * **M4 (65%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
   page-fault handling, anonymous, file-backed and `SEC_IMAGE` NT sections with
   demand paging, and a user VA allocator above 8 GiB.
-* **M5 (55%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
+* **M5 (58%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, preemptive round-robin driven by the LAPIC timer, reference-counted
   handle duplication (`NtDuplicateObject`), thread/process termination plus
-  alert state (`test-exit`), and user APC delivery through a ring-3 trampoline
-  (`test-apc`: `apc-routine-ok`, `apc-resume-ok`).
-* **M6 (94%)**: SYSCALL entry with stack arguments, 91 NT handlers covering
+  alert state (`test-exit`), user APC delivery through a ring-3 trampoline
+  (`test-apc`: `apc-routine-ok`, `apc-resume-ok`), and dynamic user threads
+  (`NtCreateThreadEx` 0xc2: own user stack, ETHREAD slot, ready-queue insertion
+  and a ring-3 entry; `test-thread-create`).
+* **M6 (95%)**: SYSCALL entry with stack arguments, 95 NT handlers covering
   file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
   rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
   `NtWriteVirtualMemory`, lock/unlock/flush), event, mutant, semaphore and timer
@@ -117,8 +119,11 @@ Done:
   thread, decrement a positive semaphore count and fire on timer expiry.
   Blocking scheduler waits return `STATUS_NOT_IMPLEMENTED`. User APCs are
   delivered (`NtQueueApcThread` 0x45 → `NtTestAlert`/alertable wait → ring-3
-  trampoline) but only `RAX`/`RBP` are restored. SSNs were re-checked against
-  19045 (`NtOpenThread` 0x12f, `NtResetEvent` 0x17a).
+  trampoline) but only `RAX`/`RBP` are restored. `NtCreateThreadEx` 0xc2 creates
+  a thread with its own user stack and ETHREAD, inserts it into the ready queue
+  and starts it at CPL3 (`test-thread-create`). SSNs were re-checked against
+  19045 (`NtOpenThread` 0x12f, `NtResetEvent` 0x17a); the earlier documented count
+  was an undercount (token/thread SSNs 0x24, 0x2f, 0x41 and 0xc2).
 * **M10 (35%)**: polling AHCI (`READ`/`WRITE DMA`, SPOTFAT port selection), FAT32
   read and in-place write with cluster allocation on growth, path resolution
   through subdirectories for open/read/query (creation and writes stay
@@ -130,14 +135,16 @@ Done:
 Remaining:
 
 * M4: working sets, copy-on-write, section sharing.
-* M5: priorities and quantum, idle thread, scheduler-integrated APC.
+* M5: priorities and quantum, idle thread, scheduler-integrated APC, thread teardown/join,
+  per-thread TEB and TSS `RSP0`.
 * M6: blocking scheduler waits, full APC register-context save, remaining syscall semantics.
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
 `test-namespace`, `test-iocp`, `test-sync`, `test-exit`, `test-registry`,
-`test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc` and the host unit/FAT32
-suites are green (2026-11-27) — 26 QEMU test targets in total.
+`test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc`,
+`test-thread-create` and the host unit/FAT32
+suites are green (2026-11-27) — 27 QEMU test targets in total.
 
 ---
 

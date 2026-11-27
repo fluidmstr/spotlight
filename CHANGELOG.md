@@ -7,7 +7,38 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] — user APC delivery, kernel 69%, project 41% (2026-11-27)
+## [Unreleased] — user thread creation, 95 SSNs, kernel 70%, project 42% (2026-11-27)
+
+### Added
+
+- **User thread creation.** `NtCreateThreadEx` (0xc2) allocates its own user
+  stack (`mm.user_alloc`), takes a dynamic `ETHREAD` slot, is inserted into the
+  ready queue and enters ring 3 (`spot_user_thread_start` →
+  `spot_enter_user3_arg`) with the start routine and argument. New
+  `test-thread-create` proves the scheduler switch and a syscall from the new
+  thread (`thread-create-ok`). Remaining: thread teardown/join, per-thread TEB
+  and TSS `RSP0`, and kernel-mode thread starts.
+
+### Changed
+
+- **Syscall count corrected to 95 SSNs:** the earlier token/thread SSNs
+  `0x24`, `0x2f`, `0x41` and the new `0xc2` were not counted.
+- **Readiness scales:** Spotlight NT **69% → 70%** (M5 **55% → 58%**,
+  M6 **94% → 95%**), the project overall **41% → 42%**. Spotlight X stays
+  **5%**, Spotlight PE stays **8%**; M0–M2 100%, M3 75%, M4 65%, M10 35%, all
+  others 0%.
+- **Tests:** 27 QEMU targets (adds `test-thread-create`).
+
+### Verified
+
+| Check | Result |
+|---|---|
+| `test-thread-create` | `thread-create-ok` (ring-3 start + syscall from the new thread) |
+| QEMU smoke boot chain | `SPOTBOOT true`, `SPOTLDR true`, kernel marker `true` |
+
+---
+
+## [Unreleased] — historical: user APC delivery, kernel 69%, project 41% (2026-11-27)
 
 ### Added
 
@@ -36,7 +67,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] — APC delivery, boot chain, PE apply path and refreshed scales (2026-11-27)
+## [Unreleased] — historical: APC delivery, boot chain, PE apply path and refreshed scales (2026-11-27)
 
 ### Changed
 
@@ -62,11 +93,12 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] — 91-SSN surface, object namespace, I/O completion, direct VM access (2026-11-27)
+## [Unreleased] — 95-SSN surface, object namespace, I/O completion, direct VM access (2026-11-27)
 
 ### Added
 
-- **91 NT syscalls / 91 SSNs (up from 74).** New since the 74-SSN pass:
+- **95 NT syscalls / 95 SSNs** (the earlier documented count was an undercount;
+  see the top entry). New since the 74-SSN pass:
   - **Waits:** `NtWaitForSingleObject` 0x04 now polls to a TSC deadline for finite
     timeouts; `NtWaitForMultipleObjects` 0x5b and `NtWaitForMultipleObjects32`
     0x1a implement `WaitAll`/`WaitAny` over events, mutants, semaphores and
