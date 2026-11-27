@@ -140,7 +140,8 @@ Self-tests: `test-boot` (38/38 lines), `test-lapic` (LAPIC timer), `test-timer` 
 | [spotlight-x](https://github.com/fluidmstr/spotlight-x) | userland, Win32, GUI, distribution |
 | [spotlight-pe](https://github.com/fluidmstr/spotlight-pe) | installer and recovery environment |
 
-Version: `26.4173.0.1` (`YY.BUILD.0.1`), tag `v26.4173.0.1`.
+Version: `26.1.4280.0.1-dev` (`YY.SEMVER.BUILD.0.1[-dev]`), tag
+`v26.1.4280.0.1`.
 
 ---
 

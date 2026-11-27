@@ -82,7 +82,9 @@ documentation and must be confirmed on build 19045 before drivers depend on it.
 | `spotlight-x` | `user/`, `distro/`, tools, application corpus | `spotlight-nt` (submodule) |
 | `spotlight-pe` | installer environment: console, explorer, installer | `spotlight-nt` (submodule) |
 
-Versions are identical across all three: `YY.BUILD.0.1`.
+Versions are identical across all three: `YY.SEMVER.BUILD.0.1[-dev]` — `YY`
+(year), `SEMVER` (API/ABI major line), `BUILD` (random four-digit build),
+fixed `0.1` tail, optional `-dev` prerelease.
 
 ---
 

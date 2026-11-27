@@ -1,6 +1,9 @@
 # Changelog
 
-All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1`).
+All notable milestones. Versions follow `YY.SEMVER.BUILD.0.1[-dev]`: `YY` is
+the year, `SEMVER` is the API/ABI major line, `BUILD` is a random four-digit
+build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for example
+`26.1.4280.0.1-dev`, tag `v26.1.4280.0.1`).
 
 ---
 
@@ -156,7 +159,7 @@ All notable milestones. Versions follow `YY.BUILD.0.1` (for example `26.4173.0.1
 
 ---
 
-## [26.4173.0.1] — 2026-11-26
+## [26.1.4280.0.1] — 2026-11-26
 
 First bootable milestone. The kernel is not usable as an OS yet; it is a proven
 foundation.

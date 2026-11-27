@@ -118,7 +118,9 @@ modules the pipeline is `v -shared -o build/obj/x.c kernel/hal` followed by
 ## Reproducibility
 
 * V is pinned by `.vvmrc` (0.5.2).
-* Every generated version header comes from `VERSION` (`YY.BUILD.0.1`).
+* Every generated version header comes from `VERSION`
+  (`YY.SEMVER.BUILD.0.1[-dev]`: year, API/ABI major line, random four-digit
+  build, fixed `0.1` tail, optional `-dev` prerelease).
 * `v run mk/build.vsh -- version` must print the same value on every machine.
 
 ---

@@ -49,7 +49,7 @@ Exit code is non-zero on failure, so all of them are CI-ready.
 a comment:
 
 ```
-Spotlight loader 26.4173.0.1
+Spotlight loader 26.1.4280.0.1-dev
 loader: image at
 I [boot] KiSystemStartup entered
 I [boot] loader block accepted

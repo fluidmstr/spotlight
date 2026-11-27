@@ -68,7 +68,7 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 No screenshots, no promises. These lines are produced by the kernel in QEMU:
 
 ```
-Spotlight loader 26.4173.0.1
+Spotlight loader 26.1.4280.0.1-dev
 loader: read 7680 bytes
 loader: image at 0x7bd37000 relocs 32
 loader: stack 0x7bd37000 block 0x7e4b6000 map 5280
