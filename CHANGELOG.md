@@ -55,11 +55,22 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
   validates unattended installs through the existing State plan/digest path.
   14 answer tests include license-false zero-write/no-applier proofs; the merged
   installer suite has 83 tests.
-- **Readiness scales:** Spotlight NT **72% → 76%** (M5 **60% → 65%**,
-  M6 **95% → 98%**), the project overall **44% → 47%**, Spotlight X **5% → 10%**,
-  Spotlight PE **8% → 9%**; M0–M2 100%, M3 75%, M4 65%, M10 37%, M11/M14 5%, all
+- **TSS `RSP0` synchronization.** Every Ps thread-stack publication now updates both the
+  SYSCALL stack selector and `TSS.Rsp0`; `test-threads` and `test-thread-create` verify A/B/user
+  values. Hardware ring3 interrupt entry remains unproven.
+- **Full X GPT auto-launch.** Normal kernels parse the protective MBR/primary GPT, locate the ESP,
+  read `X/HELLO.EXE` through sector-backed FAT32 without caching the 63 MiB volume, and launch it
+  automatically. `test-x-image` boots the real 64 MiB image under OVMF and requires the syscall
+  round-trip.
+- **Object-only process lifecycle.** `NtCreateProcess` (SSN 0xBA) now creates kind-13 process
+  objects from an eight-slot pool with monotonic PIDs, query/wait/terminate/close and duplicate
+  reference semantics. It does not create an address space or thread; `test-process` proves the
+  lifecycle and caller CR3/TSS preservation.
+- **Readiness scales:** Spotlight NT **72% → 79%** (M5 **60% → 75%**,
+  M6 **95% → 99%**), the project overall **44% → 50%**, Spotlight X **5% → 12%**,
+  Spotlight PE **8% → 10%**; M0–M2 100%, M3 75%, M4 65%, M10 37%, M11 5%, M14 10%, all
   others 0%.
-- **Tests:** 30 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`).
+- **Tests:** 32 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`).
 
 ### Verified
 
@@ -70,9 +81,12 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 | `test-blocking-wait` | block (0 polls), signal resume, timeout resume |
 | `test-apc` | real `NtTestAlert` delivery; RAX/RBP/RDX/R8/R9/R10 restore |
 | `test-x-hello` | FAT32 `\X\hello.exe` → separate process context → `syscall=0x5a` + `XELL` |
+| `test-x-image` | full 64 MiB GPT/FAT32 image → primary GPT/ESP → sector-backed FAT32 → automatic hello launch |
+| `test-threads` | TSS `RSP0` follows A/B thread stack publication |
 | PE `test-answer` | 14 parser/plan/digest tests; license-false zero-write proof |
 | `tests/abi` | 7 suites: SSN/status/layout/list/RTL/OBJECT_HEADER/PS checks |
-| X `test-ntdll` | 95 exports/stubs; 3494 table/CSV/kernel-constant/byte assertions |
+| X `test-ntdll` | 96 exports/stubs; 3530 table/CSV/kernel-constant/byte assertions |
+| `test-process` | kind-13 create/query/wait/terminate/close, pool/PID and CR3/TSS checks |
 | `test` (host) | ABI/SSN suite green, 95 SSN rows |
 
 ---

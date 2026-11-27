@@ -13,8 +13,8 @@ M1  ████████████████████ 100%   ✅
 M2  ████████████████████ 100%   ✅
 M3  ███████████████░░░░░  75%   🟡
 M4  █████████████░░░░░░░  65%
-M5  ████████████░░░░░░░░  65%
-M6  ███████████████████░  98%
+M5  ████████████░░░░░░░░  75%
+M6  ███████████████████░  99%
 M7  ░░░░░░░░░░░░░░░░░░░░   0%
 M8  ░░░░░░░░░░░░░░░░░░░░   0%
 M9  ░░░░░░░░░░░░░░░░░░░░   0%
@@ -22,9 +22,9 @@ M10 ███████░░░░░░░░░░░░░  37%
 M11 ░░░░░░░░░░░░░░░░░░░░   5%
 M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
-M14 ░░░░░░░░░░░░░░░░░░░░   5%
+M14 ░░░░░░░░░░░░░░░░░░░░  10%
 
-Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 76% · X 10% · project 47% · PE 9%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 79% · X 12% · project 50% · PE 10%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -38,16 +38,16 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 | **M2** | COM1 + klog, GDT/TSS/IDT, exceptions, KPCR, PIC/PIT, bugcheck | ✅ |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, spinlocks, timers, PCI, SMP | 🟡 75% |
 | **M4** | Mm: PFN, pool, page tables, VAD, sections | 🟡 65% |
-| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 65% |
-| **M6** | syscalls, ring-3 process, dispatch | 🟡 98% |
+| **M5** | Ob/Ps: objects, processes, threads, APC | 🟡 75% |
+| **M6** | syscalls, ring-3 process, dispatch | 🟡 99% |
 | **M7** | Io/PnP/Po — **gate G2** | ⬜ |
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
 | **M10** | storage, NTFS, Cc | 🟡 37% |
-| **M11** | ntdll, ALPC, console | 🟡 5% — 95 host-validated syscall stubs; no loader/process |
+| **M11** | ntdll, ALPC, console | 🟡 5% — 96 host-validated syscall stubs; no loader/process |
 | **M12** | Win32 layer, `.exe` corpus → **L3** | ⬜ |
 | **M13** | Track A: real MS drivers and userland | 🔬 |
-| **M14** | Spotlight X 1.0: image, installer | 🟡 5% — bootstrap GPT/FAT32 image boots to HAL init |
+| **M14** | Spotlight X 1.0: image, installer | 🟡 10% — full GPT/FAT32 image auto-launches hello; no `spotinit` |
 
 ### M2, in detail — closed
 
@@ -94,7 +94,7 @@ Done:
 * **M4 (65%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
   page-fault handling, anonymous, file-backed and `SEC_IMAGE` NT sections with
   demand paging, and a user VA allocator above 8 GiB.
-* **M5 (65%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
+* **M5 (75%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, preemptive round-robin driven by the LAPIC timer, reference-counted
   handle duplication (`NtDuplicateObject`), thread/process termination plus
   alert state (`test-exit`), user APC delivery through a ring-3 trampoline
@@ -104,7 +104,7 @@ Done:
   handle (`NtTerminateThread` records the exit code and dequeues; a
   non-consumptive wait returns immediately after exit; `ThreadBasicInformation`
   reports `ExitStatus`/`UniqueThread`; `test-thread-exit`).
-* **M6 (98%)**: SYSCALL entry with stack arguments, 95 NT handlers covering
+* **M6 (99%)**: SYSCALL entry with stack arguments, 96 NT handlers covering
   file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
   rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
   `NtWriteVirtualMemory`, lock/unlock/flush), event, mutant, semaphore and timer
@@ -117,7 +117,9 @@ Done:
   queries, plus pseudo-handle opens, timer resolution and instruction-cache
   flush; PE32+ loader with IAT/TEB/PEB at CPL3. `test-x-hello` reads the X-authored
   `\X\hello.exe` through AHCI/FAT32, creates a separate DTB/TEB/PEB/user-stack context and
-  completes `NtQuerySystemTime` plus the `XELL` syscall marker (`x-hello-ok`). `NtWaitForSingleObject` covers
+  completes `NtQuerySystemTime` plus the `XELL` syscall marker (`x-hello-ok`). `test-x-image`
+  now performs the same launch automatically from the full GPT image through primary-GPT parsing
+  and sector-backed FAT32 ESP reads. `NtWaitForSingleObject` covers
   signaled, zero-timeout and scheduler-blocking finite waits; the multi-object
   calls add `WaitAll`/`WaitAny` over events, mutants, semaphores and timers
   (`test-sync`); `test-blocking-wait` proves zero poll iterations and signal/timeout
@@ -148,15 +150,15 @@ Remaining:
 
 * M4: working sets, copy-on-write, section sharing.
 * M5: priorities and quantum, idle thread, scheduler-integrated APC, join/stack
-  reclamation, per-thread TEB and TSS `RSP0`.
+  reclamation and per-thread TEB. TSS `RSP0` now follows thread-stack publication.
 * M6: APC FPU/exception-context save, remaining syscall semantics.
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
-`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-x-hello`, `test-exit`, `test-registry`,
+`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-exit`, `test-registry`,
 `test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc`,
 `test-thread-create`, `test-thread-exit` and the host unit/FAT32
-suites are green (2026-11-28) — 30 QEMU test targets in total.
+suites are green (2026-11-28) — 32 QEMU test targets in total.
 
 ---
 

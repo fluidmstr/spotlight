@@ -5,13 +5,13 @@
 ---
 
 ```
-Spotlight NT     ██████████████░░░░░░  76%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 65%, M6 98%, M10 37%
-Spotlight X      █░░░░░░░░░░░░░░░░░░░  10%   X hello.exe executes from FAT32; ntdll stubs host-only
-Spotlight PE     █░░░░░░░░░░░░░░░░░░░   9%   installer core, rollback, console, ISO, answer plans
-Spotlight        ████████░░░░░░░░░░░░  47%   the project as a product (target: L3)
+Spotlight NT     ██████████████░░░░░░  79%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 75%, M6 99%, M10 37%
+Spotlight X      █░░░░░░░░░░░░░░░░░░░  12%   full GPT image auto-launches hello; 96 ntdll stubs
+Spotlight PE     █░░░░░░░░░░░░░░░░░░░  10%   installer core, rollback, console, ISO, answer plans
+Spotlight        ████████░░░░░░░░░░░░  50%   the project as a product (target: L3)
 ```
 
-**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 65%, M6 at
+**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 75%, M6 at
 98% and M10 at 37%. Our own UEFI boot manager chain-loads our loader, which boots
 a PE32+ kernel written in V, exits boot services, builds identity page tables and
 enters `KiSystemStartup`; the QEMU smoke run reports `SPOTBOOT true`,
@@ -32,19 +32,18 @@ and symbolic-link objects, I/O completion ports, direct virtual-memory
 read/write, user APC delivery through a ring-3 trampoline, an in-memory registry,
 timed delays and an NTFS parser.
 
-**Spotlight X:** 10% — a deterministic GPT/FAT32 bootstrap image boots to kernel HAL init, a
-linked `ntdll.dll` exposes 95 host-validated syscall trampolines, and `test-x-hello` now loads
-`\X\hello.exe` through AHCI/FAT32 into a separate DTB/TEB/PEB/stack context. The PE completes
-`NtQuerySystemTime` and the `XELL` syscall marker (`x-hello-ok`). The full X image does not launch it
-automatically yet; ntdll loader/heap/RTL, Win32 and GUI remain absent.
+**Spotlight X:** 12% — a deterministic GPT/FAT32 image boots the kernel and automatically launches
+`\X\hello.exe` through the primary-GPT/sector-backed ESP path. A linked `ntdll.dll` exposes 96
+host-validated syscall trampolines. The PE completes `NtQuerySystemTime` and the `XELL` marker;
+ntdll loader/heap/RTL, Win32 and GUI remain absent.
 
-**Spotlight PE:** 9% — host-tested installer core (83 installer tests + 14 answer tests + 13 image
+**Spotlight PE:** 10% — host-tested installer core (83 installer tests + 14 answer tests + 13 image
 tests + 11 ISO tests), durable journal, dry-run executor, deterministic GPT/FAT32 image builder,
 file-backed apply, journal-driven `no-gpt` rollback, host console/init, unsigned ISO 9660/El Torito
 media, and deterministic unattended answer plans. QEMU/OVMF reaches the kernel; there is still no
 PE userland session or interactive installer.
 
-**Recent kernel progress:** 95 NT syscalls, up from 74 (the earlier count missed the
+**Recent kernel progress:** 96 NT syscalls, up from 74 (the earlier count missed the
 token/thread SSNs 0x24, 0x2f, 0x41 and the new 0xc2): file and path-based
 attribute queries (including rename via `FileRenameInformation`,
 delete-on-close via `FileDispositionInformation`, `NtCreateFile` disposition
@@ -82,11 +81,11 @@ and `NtResetEvent` to 0x17a. APC delivery restores `RAX` (NTSTATUS), `RBP`,
 Also: a CPL3 PE image making a multi-argument `SYSCALL` including stack arguments
 (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a synchronous
 whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT sections with demand
-paging, and a user VA allocator above 8 GiB. 30 QEMU test targets plus the host
+paging, and a user VA allocator above 8 GiB. 32 QEMU test targets plus the host
 FAT32 and unit suites are green. There is no third-party Windows `.exe` (L3),
 no runnable ntdll/Win32/GUI or PE userland session, no `NtCreateProcess`/full process objects
-(the static user context executes `hello.exe`; join/stack reclamation is missing), no SMP, and no
-COW/pagefile yet; nested-path file creation and writes are not implemented.
+(the static user context executes `hello.exe`; join/stack reclamation is missing), no per-thread TEB,
+no SMP, and no COW/pagefile yet; nested-path file creation and writes are not implemented.
 
 ---
 
@@ -158,7 +157,7 @@ I [serial] loopback self-test passed
 Self-tests: `test-boot` (38/38 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`),
 `test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush, rename, delete-on-close, subdirectory paths, DOS creation/write timestamps),
 `test-section` (NT sections), `test-event` (named events), `test-namespace` (directory/symbolic-link objects), `test-iocp` (I/O completion),
-`test-sync` (scheduler-blocking waits), `test-blocking-wait` (zero polls, signal/timeout resume), `test-x-hello` (FAT32 `\X\hello.exe` → process → syscall round-trip), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-thread-exit` (exit, dequeue, post-exit wait and query), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
+`test-sync` (scheduler-blocking waits), `test-blocking-wait` (zero polls, signal/timeout resume), `test-x-hello` (FAT32 `\X\hello.exe` → process → syscall round-trip), `test-x-image` (full GPT image → automatic launch), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-thread-exit` (exit, dequeue, post-exit wait and query), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
 `test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 30 QEMU test targets in total.
 
 ---
