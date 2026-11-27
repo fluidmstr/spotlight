@@ -9,20 +9,20 @@
 
 <br>
 
-![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-72%25%20·%20M4-2ea043?style=flat-square)
-![Spotlight X](https://img.shields.io/badge/Spotlight%20X-5%25-lightgrey?style=flat-square)
+![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-74%25%20·%20M4-2ea043?style=flat-square)
+![Spotlight X](https://img.shields.io/badge/Spotlight%20X-7%25-lightgrey?style=flat-square)
 ![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-8%25-lightgrey?style=flat-square)
-![Spotlight](https://img.shields.io/badge/Spotlight%20project-44%25-orange?style=flat-square)
+![Spotlight](https://img.shields.io/badge/Spotlight%20project-45%25-orange?style=flat-square)
 ![ABI](https://img.shields.io/badge/ABI-Windows%2010%20x64%2019045-0078d4?style=flat-square)
 ![Language](https://img.shields.io/badge/language-V-4f7396?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--2.0--or--later-blue?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-x86--64%20UEFI-555?style=flat-square)
 
 ```
-Spotlight NT     ██████████████░░░░░░  72%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 60%, M6 95%, M10 37%
-Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro — skeleton + specs
-Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core host-tested; file-backed apply path
-Spotlight        ████████░░░░░░░░░░░░  44%   the project as a product (target: L3)
+Spotlight NT     ██████████████░░░░░░  74%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 65%, M6 96%, M10 37%
+Spotlight X      █░░░░░░░░░░░░░░░░░░░   7%   bootstrap GPT/FAT32 image; userland skeleton
+Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core, rollback, host console, ISO
+Spotlight        ████████░░░░░░░░░░░░  45%   the project as a product (target: L3)
 ```
 
 </div>
@@ -53,10 +53,10 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 
 | Scale | What it measures | Progress | Works today | Next |
 |---|---|---|---|---|
-| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **72%** (M0–M2 ✅, M3 75%, M4 65%, M5 60%, M6 95%, M10 37%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 95 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, user thread creation (`NtCreateThreadEx`), thread exit/dequeue, non-consumptive post-exit wait and `ThreadBasicInformation` through a kind-12 handle, user APC delivery through a ring-3 trampoline, PE32+ loader with IAT/TEB/PEB/process CR3, polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, rename and delete-on-close, file disposition modes, FAT32 subdirectory paths and DOS creation/write timestamps surfaced as FILETIMEs (`FileBasicInformation`, `FileAllInformation`, `FileNetworkOpenInformation`), event/mutant/semaphore/timer objects with named opens, single- and multi-object waits, object namespace (`\KnownDlls`, `\BaseNamedObjects`, directory and symbolic-link objects), I/O completion ports, direct virtual-memory read/write, in-memory registry, token queries and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle/thread join (stack reclamation); M6: blocking waits and broader dispatch; M8: hives; M10: ext4, partial/async flush, write-back cache, nested-path creation |
-| **Spotlight X** | userland, Win32 layer, GUI, distro | **5%** (skeleton + specs) | repository layout, architecture and app-compatibility plans, freestanding PE32+ `hello.exe` seed (13 host tests, 2 KB, no imports) | ntdll and PE loader behind syscalls (needs L1) |
-| **Spotlight PE** | installer / recovery environment | **8%** (docs + host-tested installer core) | repo, subsystem docs, `mk/build.vsh`, installer state machine, durable journal, dry-run mock-disk executor, deterministic GPT/FAT32 image builder with our boot artifacts, and a file-backed apply path (GPT primary/backup, FAT32 ESP, payload copy, read-back, journal); still no PE userland/console or interactive installer | console/explorer on the kernel, real disk adapter, interactive installer flow |
-| **Spotlight** | the project as a product | **44%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
+| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **74%** (M0–M2 ✅, M3 75%, M4 65%, M5 65%, M6 96%, M10 37%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 95 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, user thread creation (`NtCreateThreadEx`), thread exit/dequeue, non-consumptive post-exit wait and `ThreadBasicInformation` through a kind-12 handle, user APC delivery through a ring-3 trampoline, PE32+ loader with IAT/TEB/PEB/process CR3, polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, rename and delete-on-close, file disposition modes, FAT32 subdirectory paths and DOS creation/write timestamps surfaced as FILETIMEs (`FileBasicInformation`, `FileAllInformation`, `FileNetworkOpenInformation`), event/mutant/semaphore/timer objects with named opens, single- and multi-object scheduler-blocking waits (`test-blocking-wait`), object namespace (`\KnownDlls`, `\BaseNamedObjects`, directory and symbolic-link objects), I/O completion ports, direct virtual-memory read/write, in-memory registry, token queries and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle/thread join (stack reclamation); M6: APC context and broader dispatch; M8: hives; M10: ext4, partial/async flush, write-back cache, nested-path creation |
+| **Spotlight X** | userland, Win32 layer, GUI, distro | **7%** (bootstrap image + userland specs) | repository layout, freestanding PE32+ `hello.exe` seed (13 host tests, 2 KB, no imports), deterministic 64 MiB GPT/FAT32 image with boot artifacts + hello + config; QEMU/OVMF boots to HAL init | ntdll/PE-loader integration that launches `\X\hello.exe`, then Win32 |
+| **Spotlight PE** | installer / recovery environment | **8%** (docs + host-tested installer core) | state machine, durable journal, dry-run and file-backed apply, journal-driven `no-gpt` rollback, host console/init, deterministic GPT/FAT32 image and unsigned ISO 9660/El Torito media; QEMU/OVMF reaches the kernel, not a PE session | bootable `spotpe-init`, real disk adapter, interactive installer |
+| **Spotlight** | the project as a product | **45%** | honest start: a reproducible kernel bring-up with tests | L1: first ring-3 process and syscall |
 
 > The kernel is ahead of the OS. That is expected: userland and the installer need
 > a broad, stable syscall surface, not a handful of handlers.
@@ -177,7 +177,7 @@ And the machine itself proves the rest:
   (non-consumptive) and queryable through `NtQueryInformationThread` class 0
   `ThreadBasicInformation` — `test-thread-exit`), timing and waits (`NtDelayExecution`,
   `NtQueryPerformanceCounter`, `NtQuerySystemTime`, `NtWaitForSingleObject`
-  polling to a TSC deadline for finite timeouts, `NtWaitForMultipleObjects` 0x5b,
+  blocking on its own syscall stack and resuming on signal or the TSC deadline, `NtWaitForMultipleObjects` 0x5b,
   `NtWaitForMultipleObjects32` 0x1a — WaitAll/WaitAny over events, mutants,
   semaphores and timers — `NtQueryTimerResolution`, `NtSetTimerResolution`),
   process/system queries (`NtQueryInformationProcess`,
@@ -222,9 +222,10 @@ And the machine itself proves the rest:
   waits (`test-sync`); `NtWaitForSingleObject` acquires an unowned mutant or one
   owned by the current thread, decrements a positive semaphore count and fires
   when a timer expires; releasing past a semaphore's maximum returns
-  `STATUS_SEMAPHORE_LIMIT_EXCEEDED`. Blocking scheduler waits still return
-  `STATUS_NOT_IMPLEMENTED`; user APC delivery restores `RAX`/`RBP` but not the
-  full volatile register context.
+  `STATUS_SEMAPHORE_LIMIT_EXCEEDED`. An unsignaled non-zero-timeout wait
+  dequeues the thread and resumes on the same syscall stack after a signal or the
+  TSC deadline; `test-blocking-wait` observes zero poll iterations. User APC
+  delivery restores `RAX`/`RBP` but not the full volatile register context.
 * **Storage**: polling AHCI (`READ DMA`/`WRITE DMA`, SPOTFAT port selection),
   FAT32 read and in-place write with cluster allocation on growth, FAT32 path
   resolution through subdirectories for open/read/query (creation and writes
@@ -240,18 +241,18 @@ And the machine itself proves the rest:
   `test-svc3`.
 * **Scheduling**: preemptive round-robin with the LAPIC timer.
 * **ABI**: syscall numbers re-checked against the 19045 reference, correcting
-  `NtOpenThread` to 0x12f and `NtResetEvent` to 0x17a.
+  `NtOpenThread` to 0x12f and `NtResetEvent` to 0x17a; host assertions cover RTL
+  types and `OBJECT_HEADER`, and `kpcr_init` refuses to boot if the documented
+  GS offsets drift from the V layout.
 
-28 QEMU test targets plus the host FAT32 and unit suites are green, including
+29 QEMU test targets plus the host FAT32 and unit suites are green, including
 `test-boot`, `test-disk`, `test-file`, `test-section`, `test-event`,
-`test-namespace`, `test-iocp`, `test-sync`, `test-apc`, `test-thread-create`,
-`test-thread-exit`, `test-exit`, `test-registry`, `test-svc`, `test-svc3`,
-`test-misc` and
-`test-preempt`. There is still no real Windows `.exe` (L3), no ntdll/Win32/GUI,
-no installer, no blocking scheduler waits, no real process creation (threads are
-created through `NtCreateThreadEx`; join/stack reclamation is missing), no SMP,
-and no COW
-or pagefile. Nested-path file creation and writes are not implemented.
+`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-apc`,
+`test-thread-create`, `test-thread-exit`, `test-exit`, `test-registry`, `test-svc`,
+`test-svc3`, `test-misc` and `test-preempt`. There is still no real Windows `.exe` (L3),
+no ntdll/Win32/GUI, no installer running on the kernel, no real process creation
+(threads are created through `NtCreateThreadEx`; join/stack reclamation is missing),
+no SMP, and no COW or pagefile. Nested-path file creation and writes are not implemented.
 
 What this means: our own UEFI boot manager chain-loads our loader, which reads a PE32+ kernel, allocates pages, applies
 relocations, exits boot services, builds its own page tables, switches CR3, installs
@@ -270,8 +271,8 @@ M1  ████████████████████ 100%   Loader: 
 M2  ████████████████████ 100%   Kernel bring-up: serial, GDT/IDT, KPCR, IRQ, bugcheck
 M3  ███████████████░░░░░  75%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI
 M4  █████████████░░░░░░░  65%   Memory manager: PFN, paging, VAD, NT sections, demand
-M5  ████████████░░░░░░░░  60%   Processes/threads: preemptive round-robin, queues, CR3, thread create/exit, user APC delivery
-M6  ███████████████████░  95%   Syscalls: 95 NT handlers, multi-arg entry, namespace, IOCP, waits, registry, APCs
+M5  ████████████░░░░░░░░  65%   Processes/threads: blocking waits, round-robin, CR3, create/exit, APC
+M6  ███████████████████░  96%   Syscalls: 95 NT handlers, namespace, IOCP, waits, registry, APCs
 M7  ░░░░░░░░░░░░░░░░░░░░   0%   I/O manager, PnP, power  ← gate G2
 M8  ░░░░░░░░░░░░░░░░░░░░   0%   Registry, hives, transactions
 M9  ░░░░░░░░░░░░░░░░░░░░   0%   Security: tokens, ACL, integrity
@@ -289,8 +290,8 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 | **M2** | COM1, GDT/TSS/IDT, KPCR, PIC/PIT, bugcheck | ✅ closed | serial log, `EXC 3`, `BUGCHECK 0x50000001`, `pit_ticks=0x3` |
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI | 🟡 75% | `lapic_bus_hz≈998MHz`, `ioapic_irq-ok`, `pci devices=6` |
 | **M4** | Mm: PFN page database, kernel pool, page tables, VAD, sections | 🟡 65% | `paging-on`, `vad-ok`, `demand-ok`, anonymous, file-backed and `SEC_IMAGE` NT sections (`test-section`, `test-section-file`, `test-section-image`) |
-| **M5** | Ob/Ps: objects, processes, threads, scheduler | 🟡 60% | `preempt-ok`, `sched-tid=0x1`, `cr3-b`/`cr3-a`, `thread-a-resumed`, `test-thread-create` ring-3 start, `test-thread-exit` (exit code, dequeue, post-exit wait, `ThreadBasicInformation`), `test-exit`, `test-apc` |
-| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 95% | 95 NT handlers; `test-svc3` multi-argument SYSCALL incl. stack args; `test-apc` APC delivery/resume; `test-event` named events, `test-namespace` object namespace, `test-iocp` I/O completion, `test-sync` waits, `test-registry`, `test-exe-file` |
+| **M5** | Ob/Ps: objects, processes, threads, scheduler | 🟡 65% | `preempt-ok`, `sched-tid=0x1`, `cr3-b`/`cr3-a`, `thread-a-resumed`, `test-thread-create` ring-3 start, `test-thread-exit`, `test-blocking-wait` (block, signal/timeout resume, zero polls), `test-exit`, `test-apc` |
+| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 96% | 95 NT handlers; `test-svc3` multi-argument SYSCALL incl. stack args; APC delivery/resume; events, namespace, IOCP, blocking waits, registry, file timestamps, RTL/OBJECT_HEADER/KPCR ABI checks |
 | **M10** | Storage: VFS, FAT32/ext4/NTFS/btrfs, Cc | 🟡 37% | `test-disk`/`test-file`/`test-flush`: AHCI + FAT32 read/write with cluster growth, subdirectory path resolution, rename and delete-on-close, DOS creation/write timestamps exposed as FILETIMEs, VFS volume, 64 KiB image, whole-image flush re-read; NTFS parser |
 | M7–M9, M11–M12 | Io, Cm, Se, ntdll, Win32 | ⬜ | — |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
@@ -300,16 +301,16 @@ M14 ░░░░░░░░░░░░░░░░░░░░   0%   Spotligh
 
 ## Spotlight X and Spotlight PE
 
-The public project is not the kernel alone. The other two pieces exist, but they
-are honestly at the planning stage — they cannot run before the kernel exposes
-processes and system calls.
+The public project is not the kernel alone. X now has a tested bootstrap disk image and PE has a
+host-tested installer/recovery stack plus bootable installation media, but neither has a ring-3
+session running on the kernel.
 
 | | Spotlight X | Spotlight PE |
 |---|---|---|
-| **Today** | userland/distro skeleton, architecture and compatibility docs, app-corpus format, freestanding PE32+ `hello.exe` seed (13 host tests, 2 KB, no imports) | installer/recovery design, console/explorer/installer contracts, host-tested installer core (state machine, journal, dry-run executor), deterministic GPT/FAT32 image builder with our boot artifacts, and a file-backed apply path |
-| **Blocked on** | syscalls (L1) and object manager (M5) | the same, plus storage (M10) and the X image format |
-| **Next** | ntdll skeleton and PE loader behind `Nt*` stubs | console over COM1/framebuffer once ring 3 exists |
-| **Progress** | 5% | 8% |
+| **Today** | userland/distro skeleton, freestanding PE32+ `hello.exe` seed (13 host tests, 2 KB), deterministic GPT/FAT32 bootstrap image; QEMU/OVMF boots to HAL init, but hello is not launched | installer/recovery design, host console/init, state machine, journal, dry-run/file-backed apply, `no-gpt` rollback, GPT/FAT32 image and unsigned ISO 9660/El Torito media; QEMU/OVMF reaches the kernel, not PE |
+| **Blocked on** | kernel integration that loads `\X\hello.exe` into a process (L1) and ntdll | bootable PE userland on the kernel, then real disk adapter and interactive flow |
+| **Next** | ntdll syscall stubs and a kernel-side launch test for the existing hello PE | boot `spotpe-init`, explorer/UI, physical disk adapter |
+| **Progress** | 7% | 8% |
 
 ### Not a Windows clone
 
@@ -331,7 +332,7 @@ choices:
 * Details: ADR-0010 (namespace/filesystems), ADR-0011 (graphics), ADR-0012
   (session fallback) in `spotlight-nt/docs/adr/`.
 
-That is why the overall project sits at 44% while the kernel is at 72%: the OS
+That is why the overall project sits at 45% while the kernel is at 74%: the OS
 needs the kernel to finish first, not the other way around.
 
 ---

@@ -5,14 +5,14 @@
 ---
 
 ```
-Spotlight NT     ██████████████░░░░░░  72%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 60%, M6 95%, M10 37%
-Spotlight X      █░░░░░░░░░░░░░░░░░░░   5%   userland, Win32, GUI, distro
-Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core host-tested; file-backed apply path
-Spotlight        ████████░░░░░░░░░░░░  44%   the project as a product (target: L3)
+Spotlight NT     ██████████████░░░░░░  74%   kernel: M0–M2 closed, M3 75%, M4 65%, M5 65%, M6 96%, M10 37%
+Spotlight X      █░░░░░░░░░░░░░░░░░░░   7%   bootstrap GPT/FAT32 image; userland skeleton
+Spotlight PE     █░░░░░░░░░░░░░░░░░░░   8%   installer core, rollback, host console, ISO
+Spotlight        ████████░░░░░░░░░░░░  45%   the project as a product (target: L3)
 ```
 
-**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 60%, M6 at
-95% and M10 at 37%. Our own UEFI boot manager chain-loads our loader, which boots
+**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 65%, M5 at 65%, M6 at
+96% and M10 at 37%. Our own UEFI boot manager chain-loads our loader, which boots
 a PE32+ kernel written in V, exits boot services, builds identity page tables and
 enters `KiSystemStartup`; the QEMU smoke run reports `SPOTBOOT true`,
 `SPOTLDR true` and the kernel marker `true`. The kernel brings up COM1, GDT/TSS/IDT,
@@ -27,15 +27,15 @@ as a published VFS volume; `NtWriteFile` writes through to the cached volume and
 disk. FAT32 directory entries carry DOS creation/write timestamps, surfaced as
 FILETIMEs through `FileBasicInformation`, `FileAllInformation` and
 `FileNetworkOpenInformation`. The kernel also has event, mutant, semaphore and timer objects with named
-opens, finite timed and multi-object waits, an object namespace with directory
+opens, scheduler-blocking finite timed and multi-object waits, an object namespace with directory
 and symbolic-link objects, I/O completion ports, direct virtual-memory
 read/write, user APC delivery through a ring-3 trampoline, an in-memory registry,
 timed delays and an NTFS parser.
 
-**Spotlight PE:** 8% — host-tested installer core (59 installer tests + 13 image tests), durable journal,
-dry-run executor, deterministic GPT/FAT32 image builder with our boot artifacts,
-and a file-backed apply path (GPT primary/backup, FAT32 ESP, payload copy,
-read-back, journal). There is still no PE userland, console or interactive
+**Spotlight PE:** 8% — host-tested installer core (69 installer tests + 13 image tests + 11 ISO tests),
+durable journal, dry-run executor, deterministic GPT/FAT32 image builder with our boot artifacts,
+file-backed apply, journal-driven `no-gpt` rollback, host console/init, and unsigned ISO 9660/El
+Torito media. QEMU/OVMF reaches the kernel; there is still no PE userland session or interactive
 installer.
 
 **Recent kernel progress:** 95 NT syscalls, up from 74 (the earlier count missed the
@@ -63,19 +63,20 @@ I/O completion ports (`test-iocp`), in-memory registry keys and values seeded
 from `HKLM\Software\Microsoft\Windows NT\CurrentVersion`, token queries for
 classes 8/10/18/20, timing and thread information, current-process/thread
 handle opens, timer resolution and instruction-cache flush.
-`NtWaitForSingleObject` polls to a TSC deadline for finite timeouts, and
-`NtWaitForMultipleObjects` (0x5b) / `NtWaitForMultipleObjects32` (0x1a) implement
+`NtWaitForSingleObject` now blocks on the caller's own syscall stack for a
+non-zero timeout and resumes on a signal or the TSC deadline; delay/yield share
+the scheduler hooks. `NtWaitForMultipleObjects` (0x5b) / `NtWaitForMultipleObjects32` (0x1a) implement
 `WaitAll`/`WaitAny` over events, mutants, semaphores and timers (`test-sync`);
 signaled and zero-timeout waits acquire an unowned mutant or one owned by the
 current thread, decrement a positive semaphore count and fire on timer expiry.
+`test-blocking-wait` observes zero poll iterations plus signal and timeout resume.
 Syscall numbers were re-checked against 19045, fixing `NtOpenThread` to 0x12f
-and `NtResetEvent` to 0x17a. Blocking scheduler waits still return
-`STATUS_NOT_IMPLEMENTED`; APC delivery restores only `RAX`/`RBP`, not the full
-volatile register context.
+and `NtResetEvent` to 0x17a. APC delivery still restores only `RAX`/`RBP`, not
+the full volatile register context.
 Also: a CPL3 PE image making a multi-argument `SYSCALL` including stack arguments
 (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a synchronous
 whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT sections with demand
-paging, and a user VA allocator above 8 GiB. 28 QEMU test targets plus the host
+paging, and a user VA allocator above 8 GiB. 29 QEMU test targets plus the host
 FAT32 and unit suites are green. There is no real Windows `.exe` (L3),
 ntdll/Win32/GUI, PE userland/console or interactive installer, real process
 creation (threads are created through `NtCreateThreadEx`; join/stack

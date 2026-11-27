@@ -7,7 +7,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] — file timestamps, thread lifecycle, kernel 72%, project 44% (2026-11-27)
+## [Unreleased] - blocking waits, ABI checks, bootstrap images (2026-11-28)
 
 ### Added
 
@@ -31,11 +31,20 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ### Changed
 
-- **Readiness scales:** Spotlight NT **70% → 72%** (M5 **58% → 60%**,
-  M10 **35% → 37%**), the project overall **42% → 44%**. Spotlight X stays
-  **5%**, Spotlight PE stays **8%**; M0–M2 100%, M3 75%, M4 65%, M6 95%, all
+- **Scheduler-blocking waits.** Unsignaled non-zero-timeout waits dequeue the
+  thread and resume on its own syscall stack after a signal or TSC deadline;
+  delay/yield share the same hooks. `test-blocking-wait` reports zero poll
+  iterations and proves both signal and timeout resume.
+- **ABI assertions.** Host tests cover RTL structures and `OBJECT_HEADER`; boot
+  refuses a KPCR/KPRCB layout that drifts from the documented GS offsets.
+- **Bootstrap media.** X builds a tested GPT/FAT32 image that boots to HAL init;
+  PE adds file-backed rollback, host `spotpe-init`, and unsigned ISO 9660/El
+  Torito media that also boots to the kernel. Neither runs a userland session yet.
+- **Readiness scales:** Spotlight NT **72% → 74%** (M5 **60% → 65%**,
+  M6 **95% → 96%**), the project overall **44% → 45%**, Spotlight X **5% → 7%**;
+  Spotlight PE stays **8%**; M0–M2 100%, M3 75%, M4 65%, M10 37%, all
   others 0%.
-- **Tests:** 28 QEMU targets (adds `test-thread-exit`).
+- **Tests:** 29 QEMU targets (adds `test-thread-exit` and `test-blocking-wait`).
 
 ### Verified
 
@@ -43,6 +52,8 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 |---|---|
 | `test-file` | non-zero DOS creation/write timestamps through `FileBasicInformation` |
 | `test-thread-exit` | wait timeout, terminate, dequeue, wait 0, `ThreadBasicInformation` |
+| `test-blocking-wait` | block (0 polls), signal resume, timeout resume |
+| `tests/abi` | 7 suites: SSN/status/layout/list/RTL/OBJECT_HEADER/PS checks |
 | `test` (host) | ABI/SSN suite green, 95 SSN rows |
 
 ---
@@ -112,7 +123,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 ### Changed
 
 - **Readiness scales:** Spotlight NT **68% → 69%**, Spotlight PE **6% → 8%**, the
-  project overall **39% → 41%**, Spotlight X stays **5%**. Milestones: M0–M2 100%,
+  project overall **39% → 41%**, Spotlight X is **7%**. Milestones: M0–M2 100%,
   M3 75%, M4 65%, M5 **52% → 55%**, M6 **93% → 94%**, M10 35%, all others 0%.
 - **APC delivery:** `NtQueueApcThread` queues user APCs; `NtTestAlert` or an alertable wait delivers
   them through a ring-3 trampoline (`test-apc`), restoring RAX/RBP and resuming the interrupted RIP.

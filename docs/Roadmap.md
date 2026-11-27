@@ -24,7 +24,7 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░   0%
 
-Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 72% · project 44% · PE 8%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 74% · project 45% · PE 8%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -94,7 +94,7 @@ Done:
 * **M4 (65%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
   page-fault handling, anonymous, file-backed and `SEC_IMAGE` NT sections with
   demand paging, and a user VA allocator above 8 GiB.
-* **M5 (60%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
+* **M5 (65%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, preemptive round-robin driven by the LAPIC timer, reference-counted
   handle duplication (`NtDuplicateObject`), thread/process termination plus
   alert state (`test-exit`), user APC delivery through a ring-3 trampoline
@@ -104,23 +104,24 @@ Done:
   handle (`NtTerminateThread` records the exit code and dequeues; a
   non-consumptive wait returns immediately after exit; `ThreadBasicInformation`
   reports `ExitStatus`/`UniqueThread`; `test-thread-exit`).
-* **M6 (95%)**: SYSCALL entry with stack arguments, 95 NT handlers covering
+* **M6 (96%)**: SYSCALL entry with stack arguments, 95 NT handlers covering
   file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
   rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
   `NtWriteVirtualMemory`, lock/unlock/flush), event, mutant, semaphore and timer
-  objects with named opens, waits (single- and multi-object `WaitAll`/`WaitAny`,
-  finite timed polling to a TSC deadline), an in-memory registry, the object
+  objects with named opens, scheduler-blocking waits (single- and multi-object
+  `WaitAll`/`WaitAny`, finite timeout resume on the caller's syscall stack), an in-memory registry, the object
   namespace (directories, symbolic links, named sections, seeded `\KnownDlls`/
   `\BaseNamedObjects`/`\Device`/`\??`), I/O completion ports, object,
   process/thread control (terminate, alerts, priority class via
   `NtSetInformationProcess`), time, token, thread, process and system
   queries, plus pseudo-handle opens, timer resolution and instruction-cache
   flush; PE32+ loader with IAT/TEB/PEB at CPL3. `NtWaitForSingleObject` covers
-  signaled, zero-timeout and finite timed waits; the multi-object calls add
-  `WaitAll`/`WaitAny` over events, mutants, semaphores and timers (`test-sync`);
-  single-object waits acquire an unowned mutant or one owned by the current
-  thread, decrement a positive semaphore count and fire on timer expiry.
-  Blocking scheduler waits return `STATUS_NOT_IMPLEMENTED`. User APCs are
+  signaled, zero-timeout and scheduler-blocking finite waits; the multi-object
+  calls add `WaitAll`/`WaitAny` over events, mutants, semaphores and timers
+  (`test-sync`); `test-blocking-wait` proves zero poll iterations and signal/timeout
+  resume on the same syscall stack. Single-object waits acquire an unowned mutant
+  or one owned by the current thread, decrement a positive semaphore count and
+  fire on timer expiry. User APCs are
   delivered (`NtQueueApcThread` 0x45 → `NtTestAlert`/alertable wait → ring-3
   trampoline) but only `RAX`/`RBP` are restored. `NtCreateThreadEx` 0xc2 creates
   a thread with its own user stack and ETHREAD, inserts it into the ready queue
@@ -145,11 +146,11 @@ Remaining:
 * M4: working sets, copy-on-write, section sharing.
 * M5: priorities and quantum, idle thread, scheduler-integrated APC, join/stack
   reclamation, per-thread TEB and TSS `RSP0`.
-* M6: blocking scheduler waits, full APC register-context save, remaining syscall semantics.
+* M6: full APC register-context save, remaining syscall semantics.
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
-`test-namespace`, `test-iocp`, `test-sync`, `test-exit`, `test-registry`,
+`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-exit`, `test-registry`,
 `test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc`,
 `test-thread-create`, `test-thread-exit` and the host unit/FAT32
 suites are green (2026-11-27) — 28 QEMU test targets in total.
