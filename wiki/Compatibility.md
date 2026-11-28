@@ -16,7 +16,7 @@
 | Windows userland | ❌ |
 
 There is no compatibility layer hiding in the repository. The kernel prints its
-boot log on COM1, exercises 96 NT syscalls (including waits, the object namespace,
+boot log on COM1, exercises 97 NT syscalls (including waits, the object namespace,
 I/O completion ports, named objects, an in-memory registry and thread
 exit/wait/query), runs a CPL3 PE32+ test image and then halts. File handles expose
 DOS creation/write timestamps as FILETIMEs. The compatibility layers, userland and

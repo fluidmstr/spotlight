@@ -44,7 +44,7 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 | **M8** | Cm: registry, hives | ⬜ |
 | **M9** | Se: security | ⬜ |
 | **M10** | storage, NTFS, Cc | 🟡 37% |
-| **M11** | ntdll, ALPC, console | 🟡 5% — 96 host-validated syscall stubs; no loader/process |
+| **M11** | ntdll, ALPC, console | 🟡 5% — 97 host-validated syscall stubs; no loader/process |
 | **M12** | Win32 layer, `.exe` corpus → **L3** | ⬜ |
 | **M13** | Track A: real MS drivers and userland | 🔬 |
 | **M14** | Spotlight X 1.0: image, installer | 🟡 10% — full GPT/FAT32 image auto-launches hello; no `spotinit` |
@@ -108,11 +108,13 @@ Done:
   parent → child → parent with process-aware CR3/PID/PEB/TSS/GS publication,
   and verifies rollback plus page/table/slot cleanup (`test-exec-process`).
   Public `NtCreateProcess` keeps null-section object-only lifecycle and creates zero-thread
-  `SEC_IMAGE` child DTBs (`test-process-image`). Public `NtCreateThreadEx` handles complete
+  `SEC_IMAGE` child DTBs (`test-process-image`). Identity-based public `NtCreateThreadEx` handles complete
   parent → child → parent with child-only stack/KUSER mappings and cleanup
-  (`test-public-process-thread`); the Spotlight PE payload runs through `PEP2`/`PEP4`
-  (`test-pe-payload-launch`).
-* **M6 (99%)**: SYSCALL entry with stack arguments, 96 NT handlers covering
+  (`test-public-process-thread`). Minimal `NtCreateUserProcess` returns process/thread/file/section
+  handles and is covered from System and a ring-3 non-System parent (`test-create-user-process`);
+  the Spotlight PE payload runs through `PEP2`/`PEP4` (`test-pe-payload-launch`), and normal boot
+  honors an opted-in `\SPOTPE.CFG` (`test-pe-auto-boot`).
+* **M6 (99%)**: SYSCALL entry with stack arguments, 97 NT handlers covering
   file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
   rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
   `NtWriteVirtualMemory`, lock/unlock/flush), event, mutant, semaphore and timer
@@ -159,14 +161,14 @@ Remaining:
 * M4: working sets, copy-on-write, section sharing.
 * M5: priorities and quantum, idle thread, scheduler-integrated APC, join/stack reclamation
   and per-thread TEB. TSS `RSP0` now follows thread-stack publication.
-* M6: APC FPU/exception-context save, remaining syscall semantics.
+* M6: `NtResumeThread`, full PEB/TEB/process-parameter publication, APC FPU/exception-context save, remaining syscall semantics.
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
-`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-process-image`, `test-public-process-thread`, `test-pe-payload-launch`, `test-exec-process`, `test-exit`, `test-registry`,
+`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-process-image`, `test-public-process-thread`, `test-create-user-process`, `test-pe-payload-launch`, `test-pe-auto-launch`, `test-pe-auto-boot`, `test-exec-process`, `test-exit`, `test-registry`,
 `test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc`,
 `test-thread-create`, `test-thread-exit` and the host unit/FAT32
-suites are green (2026-11-28) — 36 QEMU test targets in total.
+suites are green (2026-11-28) — 39 QEMU test targets in total.
 
 ---
 

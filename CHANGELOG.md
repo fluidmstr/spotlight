@@ -7,7 +7,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] - NT 85%, public process/thread round-trip and PE payload launch (2026-11-28)
+## [Unreleased] - NT 85%, NtCreateUserProcess and normal PE diagnostic auto-launch (2026-11-28)
 
 ### Added
 
@@ -26,7 +26,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
   covers the pre-exit wait timeout, terminate, dequeue, immediate post-exit
   wait and the query. `ps` publishes the lifecycle callbacks so `ke` stays
   `ps`-free; a late-SSN audit in `main` runs after `ps_init`
-  (`syscall-slot-missing`), and `tests/abi/syscall_ssn_test.v` locks the 96
+  (`syscall-slot-missing`), and `tests/abi/syscall_ssn_test.v` locks the 97
   documented SSN rows against the 19045 table.
 
 ### Changed
@@ -39,10 +39,11 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
   refuses a KPCR/KPRCB layout that drifts from the documented GS offsets.
 - **Bootstrap media.** X builds a tested GPT/FAT32 image that boots to HAL init;
   PE adds file-backed rollback, host `spotpe-init`, and unsigned ISO 9660/El
-  Torito media that also boots to the kernel. Neither runs a userland session yet.
-- **ntdll syscall surface.** X generates 96 naked x64 trampolines, an SSN table and PE exports
+  Torito media that also boots to the kernel. The GPT server image now auto-launches the
+  diagnostic PE payload; neither provides a full userland session yet.
+- **ntdll syscall surface.** X generates 97 naked x64 trampolines, an SSN table and PE exports
   from the kernel constants plus the 19045 CSV, links `ntdll.dll`, and validates every export and
-  11-byte stub on the host (3530 assertions). No loader or process calls it yet.
+  11-byte stub on the host. No loader or process calls it yet.
 - **APC GPR restore.** `SYSRET` now starts at an aligned delivery frame; the
   trampoline calls the APC with Win64 shadow space and restores `RAX` (NTSTATUS),
   `RBP`, `RDX`, `R8`, `R9` and `R10` before the saved RIP. `test-apc` proves every
@@ -74,24 +75,35 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 - **Executable child round-trip.** `test-exec-process` builds a child PML4 and initial thread,
   switches parent → child → parent with CR3/PID/PEB/TSS/GS publication, executes the X hello
   syscalls, and verifies rollback plus leaf-page/page-table/dynamic-slot cleanup. This is an
-  internal bootstrap; public process/thread handles now have their own round-trip, while
-  `NtCreateUserProcess` remains future work.
+  internal bootstrap; public process/thread handles now have their own round-trip, and minimal
+  `NtCreateUserProcess` is implemented.
 - **PE diagnostic payload.** PE builds a freestanding AMD64 PE32+ `INIT.EXE` that opens,
   reads and closes `\SPOTPE\INIT.CFG` through NT file syscalls, emits `PEP2` for the exact
   valid config, then `PEP4`, or `PEP3` otherwise. Built-in images and ISOs carry both files;
-  NT `test-pe-payload-launch` executes the payload and returns to the parent, but no full PE
-  session is auto-started.
-- **Public initial-thread round-trip.** System-only `NtCreateThreadEx` attaches a gated initial
+  NT `test-pe-payload-launch` executes the payload and returns to the parent; normal boot now
+  auto-launches it when `\SPOTPE.CFG` explicitly opts in, but no full PE session is started.
+- **Public initial-thread round-trip.** Identity-based `NtCreateThreadEx` attaches a gated initial
   thread to a public `SEC_IMAGE` child, validates the entry in the child DTB, maps a private
   4–64 KiB stack and KUSER aliases, executes X hello syscalls and returns to the parent.
   `test-public-process-thread` verifies wait/close plus stack/thread/DTB/section/PFN cleanup.
 - **PE payload launch.** `test-pe-payload-launch` builds `INIT.EXE` + exact `INIT.CFG`, creates
   the child through public handles, requires `PEP2` → `PEP4`, restores the parent and verifies
   full cleanup. This is a diagnostic payload, not a PE shell or installer session.
+- **Native user-process bootstrap.** `NtCreateUserProcess` (`0xc9`) consumes the 19045
+  `RTL_USER_PROCESS_PARAMETERS` prefix and `PS_CREATE_INFO`, opens the image path, creates a
+  `SEC_IMAGE` child and suspended initial thread, and returns process/thread/file/section handles.
+  `test-create-user-process` covers System and ring-3 non-System parents, failure-state reporting,
+  parent restoration and PFN/MM cleanup. Full PEB/TEB/process parameters and `NtResumeThread`
+  remain future work.
+- **Normal PE diagnostic auto-launch.** The kernel validates exact `payload=server`,
+  `init=\SPOTPE\INIT.EXE`, `pe_init_auto_launch=true` and the 16-byte `INIT.CFG`, then starts the
+  payload through `NtCreateUserProcess`. `test-pe-auto-launch` and `test-pe-auto-boot` require
+  `PEP2` → `PEP4` → parent restoration. The real 64 MiB GPT server image reaches `pe-auto-ok`;
+  the ISO reaches the kernel but has no CD-ROM/ESP block backend, so `pe_init_boot_claim=false`.
 - **Readiness scales:** Spotlight NT **85%** (M4 **72%**, M5 **92%**, M6 **99%**),
   the project overall **55%**, Spotlight X **12%**, Spotlight PE **13%**;
   M0–M2 100%, M3 75%, M10 37%, M11 5%, M14 10%, all others 0%.
-- **Tests:** 36 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-process-image`, `test-public-process-thread`, `test-pe-payload-launch` and `test-exec-process`).
+- **Tests:** 39 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-process-image`, `test-public-process-thread`, `test-create-user-process`, `test-pe-payload-launch`, `test-pe-auto-launch`, `test-pe-auto-boot` and `test-exec-process`).
 
 ### Verified
 
@@ -105,15 +117,18 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 | `test-x-image` | full 64 MiB GPT/FAT32 image → primary GPT/ESP → sector-backed FAT32 → automatic hello launch |
 | `test-threads` | TSS `RSP0` follows A/B thread stack publication |
 | PE `test-answer` | 14 parser/plan/digest tests; license-false zero-write proof |
-| `tests/abi` | 7 suites: SSN/status/layout/list/RTL/OBJECT_HEADER/PS checks |
-| X `test-ntdll` | 96 exports/stubs; 3530 table/CSV/kernel-constant/byte assertions |
+| `tests/abi` | 8 suites: SSN/status/layout/list/RTL/OBJECT_HEADER/PS/NtCreateUserProcess checks |
+| X `test-ntdll` | 97 exports/stubs; table/CSV/kernel-constant/byte suites green |
 | `test-process-image` | real `SEC_IMAGE` child DTB, parent/child PTE isolation, section refcount, pool rollback and cleanup |
+| `test-create-user-process` | SSN `0xc9`, missing-image failure state, System + ring-3 non-System parent (`0x1001` → `0x1002`), handles, parent restore and PFN/MM cleanup |
+| `test-pe-auto-boot` | normal boot → opted-in config → `NtCreateUserProcess` → `PEP2`/`PEP4` → parent |
+| PE server GPT image | 64 MiB QEMU/OVMF image: exact `INIT.CFG` read, `PEP2` → `PEP4`, `pe-auto-wait=0`, `pe-auto-ok` |
 | `test-public-process-thread` | public section/process/thread handles → child KUSER + X hello syscalls → parent restore → wait/close → PFN/MM cleanup |
 | `test-pe-payload-launch` | Spotlight PE `INIT.EXE`/`INIT.CFG` → exact file I/O → `PEP2`/`PEP4` → parent restore → cleanup |
 | `test-process` | kind-13 null-section create/query/wait/terminate/close, pool/PID and CR3/TSS checks |
 | `test-exec-process` | child PML4 + initial thread → parent → child → parent; rollback/restore/cleanup counters |
 | PE `test-payload` | AMD64 PE32+ payload, no imports/runtime/heap, exact INIT.CFG file-syscall and PEP2/PEP3/PEP4 bytes; launched by NT `test-pe-payload-launch` |
-| `test` (host) | ABI/SSN suite green, 96 SSN rows |
+| `test` (host) | ABI/SSN suite green, 97 SSN rows |
 
 ---
 

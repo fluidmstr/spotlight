@@ -164,8 +164,9 @@ non-zero exit code if the marker is missing.
   its host-tested installer core, deterministic GPT/FAT32 image builder and
   file-backed apply path exist. Built-in images and ISOs carry the freestanding
   `\SPOTPE\INIT.EXE` diagnostic payload; NT `test-pe-payload-launch` executes it with
-  `INIT.CFG` and observes `PEP2`/`PEP4`, but there is no auto-started PE userland session or
-  working physical-disk installer yet.
+  `INIT.CFG` and observes `PEP2`/`PEP4`; the opted-in 64 MiB GPT server image reaches
+  `pe-auto-ok`. There is still no full PE userland session, interactive installer or ISO
+  auto-launch.
 
 If a guide on the internet promises otherwise, it is not about this project.
 
