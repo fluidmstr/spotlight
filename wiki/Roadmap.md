@@ -24,7 +24,7 @@ M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
 M14 ░░░░░░░░░░░░░░░░░░░░  10%
 
-Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 82% · X 12% · project 52% · PE 11%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 83% · X 12% · project 53% · PE 11%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -91,10 +91,10 @@ Remaining:
 
 Done:
 
-* **M4 (70%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
+* **M4 (72%)**: PFN database, kernel pool, own page tables with CR3 switch, VAD,
   page-fault handling, anonymous, file-backed and `SEC_IMAGE` NT sections with
   demand paging, and a user VA allocator above 8 GiB.
-* **M5 (85%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
+* **M5 (88%)**: EPROCESS/KTHREAD skeletons, process CR3 switching, 32-priority
   ready queues, preemptive round-robin driven by the LAPIC timer, reference-counted
   handle duplication (`NtDuplicateObject`), thread/process termination plus
   alert state (`test-exit`), user APC delivery through a ring-3 trampoline
@@ -106,8 +106,10 @@ Done:
   reports `ExitStatus`/`UniqueThread`; `test-thread-exit`). The internal
   executable-child bootstrap creates a child PML4 and initial thread, completes
   parent → child → parent with process-aware CR3/PID/PEB/TSS/GS publication,
-  and verifies rollback plus page/table/slot cleanup (`test-exec-process`);
-  public `NtCreateProcess` remains object-only.
+  and verifies rollback plus page/table/slot cleanup (`test-exec-process`).
+  Public `NtCreateProcess` keeps null-section object-only lifecycle and now creates
+  zero-thread `SEC_IMAGE` child DTBs with eager image mapping, retained section references
+  and last-close cleanup (`test-process-image`).
 * **M6 (99%)**: SYSCALL entry with stack arguments, 96 NT handlers covering
   file (incl. path-based attribute queries, `NtCreateFile` disposition modes,
   rename and delete-on-close), memory (incl. `NtReadVirtualMemory`/
@@ -153,16 +155,17 @@ Done:
 Remaining:
 
 * M4: working sets, copy-on-write, section sharing.
-* M5: priorities and quantum, idle thread, scheduler-integrated APC, join/stack
-  reclamation and per-thread TEB. TSS `RSP0` now follows thread-stack publication.
+* M5: priorities and quantum, idle thread, scheduler-integrated APC, public initial-thread
+  APIs for `SEC_IMAGE` children, join/stack reclamation and per-thread TEB. TSS `RSP0` now
+  follows thread-stack publication.
 * M6: APC FPU/exception-context save, remaining syscall semantics.
 * M10: block I/O abstraction, ext4 backend, cache manager with write-back, partial/async flush, nested-path creation and writes.
 
 Boot tests `test-disk`, `test-file`, `test-flush`, `test-section`, `test-event`,
-`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-exec-process`, `test-exit`, `test-registry`,
+`test-namespace`, `test-iocp`, `test-sync`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-process-image`, `test-exec-process`, `test-exit`, `test-registry`,
 `test-svc`, `test-svc3`, `test-misc`, `test-preempt`, `test-apc`,
 `test-thread-create`, `test-thread-exit` and the host unit/FAT32
-suites are green (2026-11-28) — 33 QEMU test targets in total.
+suites are green (2026-11-28) — 34 QEMU test targets in total.
 
 ---
 

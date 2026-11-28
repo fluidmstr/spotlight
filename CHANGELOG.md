@@ -7,7 +7,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] - NT 82%, executable child round-trip and PE diagnostic seed (2026-11-28)
+## [Unreleased] - NT 83%, executable child round-trip and PE diagnostic seed (2026-11-28)
 
 ### Added
 
@@ -50,8 +50,8 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 - **X `hello.exe` process launch.** `test-x-hello` reads `\X\hello.exe` through
   AHCI + the nested FAT32 path, creates a separate DTB/TEB/PEB/user-stack context,
   and executes `NtQuerySystemTime` plus the `XELL` marker at CPL3 (`x-hello-ok`).
-  This closes L1 for our own PE; third-party L3 and public executable process
-  creation remain, and `NtCreateProcess` remains object-only.
+  This closes L1 for our own PE; third-party L3 and a public initial-thread process
+  path remain. `NtCreateProcess` supports zero-thread `SEC_IMAGE` address spaces.
 - **PE unattended plans.** A deterministic answer-file v1 parser normalizes and
   validates unattended installs through the existing State plan/digest path.
   14 answer tests include license-false zero-write/no-applier proofs; the merged
@@ -63,21 +63,26 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
   read `X/HELLO.EXE` through sector-backed FAT32 without caching the 63 MiB volume, and launch it
   automatically. `test-x-image` boots the real 64 MiB image under OVMF and requires the syscall
   round-trip.
-- **Object-only process lifecycle.** `NtCreateProcess` (SSN 0xBA) now creates kind-13 process
+- **Public process lifecycle.** `NtCreateProcess` (SSN 0xBA) creates kind-13 process
   objects from an eight-slot pool with monotonic PIDs, query/wait/terminate/close and duplicate
-  reference semantics. It does not create an address space or thread; `test-process` proves the
-  lifecycle and caller CR3/TSS preservation.
+  reference semantics. A null section stays object-only; a valid `SEC_IMAGE` creates a zero-thread
+  child DTB with eager image mapping, retained section references and last-close cleanup.
+  `test-process` and `test-process-image` cover both paths and caller CR3/TSS preservation.
+- **SEC_IMAGE process address spaces.** Explicit-root 4 KiB mapping builds unpublished child PML4s
+  without changing the parent CR3 or global VAD. Pool exhaustion rolls back the table tree without a
+  PFN change; closing all process handles releases child tables and the final section reference.
 - **Executable child round-trip.** `test-exec-process` builds a child PML4 and initial thread,
   switches parent → child → parent with CR3/PID/PEB/TSS/GS publication, executes the X hello
   syscalls, and verifies rollback plus leaf-page/page-table/dynamic-slot cleanup. This is an
-  internal bootstrap, not public executable `NtCreateProcess`/`NtCreateUserProcess`.
-- **PE diagnostic seed.** PE builds a freestanding AMD64 PE32+ `INIT.EXE` that probes
-  `NtQuerySystemTime`, emits the `PEP1` marker through SSN 0 and loops. Built-in images and ISOs
-  carry it at `\SPOTPE\INIT.EXE`, but no boot stage launches it and there is no PE session.
-- **Readiness scales:** Spotlight NT **82%** (M4 **70%**, M5 **85%**, M6 **99%**),
-  the project overall **52%**, Spotlight X **12%**, Spotlight PE **11%**;
+  internal bootstrap; a public initial-thread path and `NtCreateUserProcess` remain future work.
+- **PE diagnostic seed.** PE builds a freestanding AMD64 PE32+ `INIT.EXE` that opens,
+  reads and closes `\SPOTPE\INIT.CFG` through NT file syscalls, emits `PEP2` for the exact
+  valid config and `PEP3` otherwise, and loops. Built-in images and ISOs carry both files,
+  but no boot stage launches the seed and there is no PE session.
+- **Readiness scales:** Spotlight NT **83%** (M4 **72%**, M5 **88%**, M6 **99%**),
+  the project overall **53%**, Spotlight X **12%**, Spotlight PE **11%**;
   M0–M2 100%, M3 75%, M10 37%, M11 5%, M14 10%, all others 0%.
-- **Tests:** 33 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process` and `test-exec-process`).
+- **Tests:** 34 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-process-image` and `test-exec-process`).
 
 ### Verified
 
@@ -94,8 +99,9 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 | `tests/abi` | 7 suites: SSN/status/layout/list/RTL/OBJECT_HEADER/PS checks |
 | X `test-ntdll` | 96 exports/stubs; 3530 table/CSV/kernel-constant/byte assertions |
 | `test-process` | kind-13 create/query/wait/terminate/close, pool/PID and CR3/TSS checks |
+| `test-process-image` | real `SEC_IMAGE` child DTB, parent/child PTE isolation, section refcount, pool rollback and cleanup |
 | `test-exec-process` | child PML4 + initial thread → parent → child → parent; rollback/restore/cleanup counters |
-| PE `test-payload` | AMD64 PE32+ seed, no imports/runtime, exact time/`PEP1` syscall bytes; carried, not launched |
+| PE `test-payload` | AMD64 PE32+ seed, no imports/runtime/heap, exact INIT.CFG file-syscall and PEP2/PEP3 bytes; carried, not launched |
 | `test` (host) | ABI/SSN suite green, 96 SSN rows |
 
 ---
@@ -145,7 +151,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ### Changed
 
-- **Readiness scales:** Spotlight NT **68% → 69%** (M5 **52% → 55%**,
+- **Readiness scales:** Spotlight NT **68% → 69%** (M5 **53% → 55%**,
   M6 **93% → 94%**), the project overall **40% → 41%**. Spotlight X stays
   **5%**, Spotlight PE stays **8%**; M0–M2 100%, M3 75%, M4 65%, M10 35%, all
   others 0%.
@@ -166,7 +172,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 - **Readiness scales:** Spotlight NT **68% → 69%**, Spotlight PE **6% → 8%**, the
   project overall **39% → 41%**, Spotlight X is **7%**. Milestones: M0–M2 100%,
-  M3 75%, M4 65%, M5 **52% → 55%**, M6 **93% → 94%**, M10 35%, all others 0%.
+  M3 75%, M4 65%, M5 **53% → 55%**, M6 **93% → 94%**, M10 35%, all others 0%.
 - **APC delivery:** `NtQueueApcThread` queues user APCs; `NtTestAlert` or an alertable wait delivers
   them through a ring-3 trampoline (`test-apc`), restoring RAX/RBP and resuming the interrupted RIP.
 - **Boot chain:** `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, `SPOTLDR` loads

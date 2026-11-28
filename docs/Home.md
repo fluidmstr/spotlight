@@ -5,13 +5,13 @@
 ---
 
 ```
-Spotlight NT     ██████████████░░░░░░  82%   kernel: M0–M2 closed, M3 75%, M4 70%, M5 85%, M6 99%, M10 37%
+Spotlight NT     ██████████████░░░░░░  83%   kernel: M0–M2 closed, M3 75%, M4 72%, M5 88%, M6 99%, M10 37%
 Spotlight X      █░░░░░░░░░░░░░░░░░░░  12%   full GPT image auto-launches hello; 96 ntdll stubs
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░  11%   installer core, rollback, console, ISO, answer plans
-Spotlight        ████████░░░░░░░░░░░░  52%   the project as a product (target: L3)
+Spotlight        ████████░░░░░░░░░░░░  53%   the project as a product (target: L3)
 ```
 
-**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 70%, M5 at 85%, M6 at
+**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 72%, M5 at 88%, M6 at
 99% and M10 at 37%. Our own UEFI boot manager chain-loads our loader, which boots
 a PE32+ kernel written in V, exits boot services, builds identity page tables and
 enters `KiSystemStartup`; the QEMU smoke run reports `SPOTBOOT true`,
@@ -49,7 +49,9 @@ interactive installer.
 token/thread SSNs 0x24, 0x2f, 0x41 and the new 0xc2). The internal executable-child
 bootstrap creates a child PML4 and initial thread and completes parent → child → parent
 with CR3/PID/PEB/TSS/GS publication, rollback and cleanup (`test-exec-process`);
-public `NtCreateProcess` remains object-only. Recent work includes file and path-based
+public `NtCreateProcess` keeps null-section object-only lifecycle and now creates zero-thread
+`SEC_IMAGE` child DTBs with eager image mapping, retained section references and last-close cleanup
+(`test-process-image`). Recent work includes file and path-based
 attribute queries (including rename via `FileRenameInformation`,
 delete-on-close via `FileDispositionInformation`, `NtCreateFile` disposition
 modes with FAT32 cluster growth, and subdirectory path resolution for
@@ -86,11 +88,11 @@ and `NtResetEvent` to 0x17a. APC delivery restores `RAX` (NTSTATUS), `RBP`,
 Also: a CPL3 PE image making a multi-argument `SYSCALL` including stack arguments
 (`test-svc3`), AHCI + FAT32 read/write behind a VFS volume with a synchronous
 whole-image flush, anonymous, file-backed and `SEC_IMAGE` NT sections with demand
-paging, and a user VA allocator above 8 GiB. 33 QEMU test targets plus the host
+paging, and a user VA allocator above 8 GiB. 34 QEMU test targets plus the host
 FAT32 and unit suites are green. There is no third-party Windows `.exe` (L3),
-no runnable ntdll/Win32/GUI or PE userland session, no public executable process creation
-(`NtCreateProcess` remains object-only; the internal child PML4/thread parent → child → parent
-bootstrap works), no public child-thread creation API, no per-thread TEB,
+no runnable ntdll/Win32/GUI or PE userland session, no public initial-thread process API
+(`NtCreateProcess` supports zero-thread `SEC_IMAGE` DTBs; the internal child PML4/thread
+parent → child → parent bootstrap works), no per-thread TEB,
 no SMP, and no COW/pagefile yet; nested-path file creation and writes are not implemented.
 
 ---
@@ -163,8 +165,8 @@ I [serial] loopback self-test passed
 Self-tests: `test-boot` (38/38 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`),
 `test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush, rename, delete-on-close, subdirectory paths, DOS creation/write timestamps),
 `test-section` (NT sections), `test-event` (named events), `test-namespace` (directory/symbolic-link objects), `test-iocp` (I/O completion),
-`test-sync` (scheduler-blocking waits), `test-blocking-wait` (zero polls, signal/timeout resume), `test-x-hello` (FAT32 `\X\hello.exe` → process → syscall round-trip), `test-x-image` (full GPT image → automatic launch), `test-process` (object-only process lifecycle), `test-exec-process` (child PML4 + initial thread → parent → child → parent → cleanup), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-thread-exit` (exit, dequeue, post-exit wait and query), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
-`test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 33 QEMU test targets in total.
+`test-sync` (scheduler-blocking waits), `test-blocking-wait` (zero polls, signal/timeout resume), `test-x-hello` (FAT32 `\X\hello.exe` → process → syscall round-trip), `test-x-image` (full GPT image → automatic launch), `test-process` (null-section process lifecycle), `test-process-image` (`SEC_IMAGE` child DTB, refcount, rollback and cleanup), `test-exec-process` (child PML4 + initial thread → parent → child → parent → cleanup), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-thread-exit` (exit, dequeue, post-exit wait and query), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
+`test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 34 QEMU test targets in total.
 
 ---
 
