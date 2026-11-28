@@ -38,7 +38,7 @@ host-validated syscall trampolines. The PE completes `NtQuerySystemTime` and the
 ntdll loader/heap/RTL, Win32 and GUI remain absent.
 
 **Spotlight PE:** 13% — host-tested installer core (83 installer tests + 14 answer tests + 15 image
-tests + 12 ISO tests + 6 payload tests + 24 init tests), durable journal, dry-run executor,
+tests + 12 ISO tests + 9 payload tests + 24 init tests), durable journal, dry-run executor,
 deterministic GPT/FAT32 image builder, file-backed apply, journal-driven `no-gpt` rollback, host
 console/init, unsigned ISO 9660/El Torito media, and deterministic unattended answer plans.
 Built-in images and ISOs carry the freestanding `\SPOTPE\INIT.EXE` payload; NT
