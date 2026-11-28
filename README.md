@@ -20,7 +20,7 @@
 
 ```
 Spotlight NT     ██████████████░░░░░░  85%   kernel: M0–M2 closed, M3 75%, M4 72%, M5 92%, M6 99%, M10 37%
-Spotlight X       █░░░░░░░░░░░░░░░░░░░   12%   full GPT image auto-launches hello; 97 ntdll stubs
+Spotlight X       █░░░░░░░░░░░░░░░░░░░   12%   full GPT image auto-launches hello; 98 ntdll stubs
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░   13%   installer core, payload launch, rollback, console, ISO, answer plans
 Spotlight        ████████░░░░░░░░░░░░  55%   the project as a product (target: L3)
 ```
@@ -53,9 +53,9 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 
 | Scale | What it measures | Progress | Works today | Next |
 |---|---|---|---|---|
-| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **85%** (M0–M2 ✅, M3 75%, M4 72%, M5 92%, M6 99%, M10 37%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 97 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, user thread creation (`NtCreateThreadEx`), thread exit/dequeue, non-consumptive post-exit wait and `ThreadBasicInformation` through a kind-12 handle, user APC delivery through a ring-3 trampoline, PE32+ loader with IAT/TEB/PEB/process CR3, internal executable-child PML4/initial-thread parent → child → parent bootstrap with rollback/cleanup (`test-exec-process`), public zero-thread `SEC_IMAGE` process DTBs (`test-process-image`), public process/initial-thread parent → child → parent execution with stack/KUSER/DTB cleanup (`test-public-process-thread`), minimal `NtCreateUserProcess` with ring-3 non-System parent coverage (`test-create-user-process`), Spotlight PE payload `INIT.CFG` → `PEP2`/`PEP4` launch (`test-pe-payload-launch`), normal opted-in PE diagnostic auto-launch (`test-pe-auto-boot`), polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, rename and delete-on-close, file disposition modes, FAT32 subdirectory paths and DOS creation/write timestamps surfaced as FILETIMEs (`FileBasicInformation`, `FileAllInformation`, `FileNetworkOpenInformation`), event/mutant/semaphore/timer objects with named opens, single- and multi-object scheduler-blocking waits (`test-blocking-wait`), object namespace (`\KnownDlls`, `\BaseNamedObjects`, directory and symbolic-link objects), I/O completion ports, direct virtual-memory read/write, in-memory registry, token queries and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle/thread join (stack reclamation); M6: APC FPU/exception context and broader dispatch; M8: hives; M10: ext4, partial/async flush, write-back cache, nested-path creation |
-| **Spotlight X** | userland, Win32 layer, GUI, distro | **12%** (first X PE execution + ntdll syscall surface) | freestanding PE32+ `hello.exe` seed (13 host tests, 2 KB), deterministic 64 MiB GPT/FAT32 image, a linked 97-stub `ntdll.dll` (table/CSV/kernel-constant/stub-byte host suites), and automatic launch from the full X image through primary-GPT + sector-backed FAT32 ESP reads (`test-x-image`) | ntdll loader/heap/RTL, then Win32 |
-| **Spotlight PE** | installer / recovery environment | **13%** (host-tested installer core + payload launch) | state machine, durable journal, dry-run/file-backed apply, `no-gpt` rollback, host console/init, deterministic GPT/FAT32 image, unsigned ISO 9660/El Torito media, deterministic unattended answer plans, and a freestanding `INIT.EXE` diagnostic payload launched through exact `INIT.CFG` I/O and `PEP2`/`PEP4`; the opted-in 64 MiB GPT server image reaches `pe-auto-ok` (83 installer + 14 answer tests) | bootable `spotpe-init`, real disk adapter, interactive installer |
+| **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **85%** (M0–M2 ✅, M3 75%, M4 72%, M5 92%, M6 99%, M10 37%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 98 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, user thread creation (`NtCreateThreadEx`), thread exit/dequeue, non-consumptive post-exit wait and `ThreadBasicInformation` through a kind-12 handle, user APC delivery through a ring-3 trampoline, PE32+ loader with IAT/TEB/PEB/process CR3, internal executable-child PML4/initial-thread parent → child → parent bootstrap with rollback/cleanup (`test-exec-process`), public zero-thread `SEC_IMAGE` process DTBs (`test-process-image`), public process/initial-thread parent → child → parent execution with stack/KUSER/DTB cleanup (`test-public-process-thread`), `NtCreateUserProcess` with real child PEB/TEB/process parameters and `NtResumeThread`, including ring-3 non-System parent coverage (`test-create-user-process`), Spotlight PE payload `INIT.CFG` → `PEP2` → `PEP5` → `PEP6` → `PEP4` launch (`test-pe-payload-launch`), normal opted-in PE diagnostic auto-launch (`test-pe-auto-boot`), polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, rename and delete-on-close, file disposition modes, FAT32 subdirectory paths and DOS creation/write timestamps surfaced as FILETIMEs (`FileBasicInformation`, `FileAllInformation`, `FileNetworkOpenInformation`), event/mutant/semaphore/timer objects with named opens, single- and multi-object scheduler-blocking waits (`test-blocking-wait`), object namespace (`\KnownDlls`, `\BaseNamedObjects`, directory and symbolic-link objects), I/O completion ports, direct virtual-memory read/write, in-memory registry, token queries and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle/thread join (stack reclamation); M6: APC FPU/exception context and broader dispatch; M8: hives; M10: ext4, partial/async flush, write-back cache, nested-path creation |
+| **Spotlight X** | userland, Win32 layer, GUI, distro | **12%** (first X PE execution + ntdll syscall surface) | freestanding PE32+ `hello.exe` seed (13 host tests, 2 KB), deterministic 64 MiB GPT/FAT32 image, a linked 98-stub `ntdll.dll` (table/CSV/kernel-constant/stub-byte host suites), and automatic launch from the full X image through primary-GPT + sector-backed FAT32 ESP reads (`test-x-image`) | ntdll loader/heap/RTL, then Win32 |
+| **Spotlight PE** | installer / recovery environment | **13%** (host-tested installer core + payload launch) | state machine, durable journal, dry-run/file-backed apply, `no-gpt` rollback, host console/init, deterministic GPT/FAT32 image, unsigned ISO 9660/El Torito media, deterministic unattended answer plans, and a freestanding `INIT.EXE` diagnostic payload launched through exact `INIT.CFG` I/O and `PEP2` → `PEP5` → `PEP6` → `PEP4`; the opted-in 64 MiB GPT server image reaches `pe-auto-ok` (83 installer + 14 answer tests) | bootable `spotpe-init`, real disk adapter, interactive installer |
 | **Spotlight** | the project as a product | **55%** | honest start: a reproducible kernel bring-up with tests | L2: ntdll + kernel32 + CRT and our own programs |
 
 > The kernel is ahead of the OS. That is expected: userland and the installer need
@@ -144,7 +144,7 @@ And the machine itself proves the rest:
 * **Boot chain**: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which loads
   `ntoskrnl.exe`; the kernel reaches HAL initialization under QEMU/OVMF. The
   smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `true`.
-* **97 NT syscalls / 97 SSNs** registered (up from 74; the earlier count missed the
+* **98 NT syscalls / 98 SSNs** registered (up from 74; the earlier count missed the
   token/thread SSNs 0x24, 0x2f, 0x41 and the new 0xc2): file I/O
   (`NtCreateFile`, `NtReadFile`,
   `NtWriteFile`, `NtQueryInformationFile`, `NtSetInformationFile`,
@@ -246,7 +246,7 @@ And the machine itself proves the rest:
   `NtCreateProcess` keeps null-section object-only lifecycle and creates zero-thread
   `SEC_IMAGE` child DTBs (`test-process-image`). Public `NtCreateThreadEx` handles now complete
   parent → child → parent with child-only stack/KUSER mappings and cleanup
-  (`test-public-process-thread`); the Spotlight PE payload runs through `PEP2`/`PEP4`
+  (`test-public-process-thread`); the Spotlight PE payload runs through `PEP2` → `PEP5` → `PEP6` → `PEP4`
   (`test-pe-payload-launch`).
 * **Scheduling**: preemptive round-robin with the LAPIC timer.
 * **ABI**: syscall numbers re-checked against the 19045 reference, correcting
@@ -280,12 +280,12 @@ M2  ████████████████████ 100%   Kernel b
 M3  ███████████████░░░░░  75%   HAL: ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI
 M4  ██████████████░░░░░░  70%   Memory manager: PFN, paging, VAD, NT sections, demand
 M5  █████████████████░░░  85%   Processes/threads: child round-trip, blocking waits, TSS RSP0, CR3, APC
-M6  ███████████████████░  99%   Syscalls: 97 NT handlers, NtCreateUserProcess, namespace, IOCP, waits, APCs
+M6  ███████████████████░  99%   Syscalls: 98 NT handlers, NtCreateUserProcess/NtResumeThread, namespace, IOCP, waits, APCs
 M7  ░░░░░░░░░░░░░░░░░░░░   0%   I/O manager, PnP, power  ← gate G2
 M8  ░░░░░░░░░░░░░░░░░░░░   0%   Registry, hives, transactions
 M9  ░░░░░░░░░░░░░░░░░░░░   0%   Security: tokens, ACL, integrity
 M10 ███████░░░░░░░░░░░░░  37%   Storage: AHCI, FAT32 read/write, subdirectory paths, DOS timestamps, whole-image flush, NTFS parser
-M11 ░░░░░░░░░░░░░░░░░░░░   5%   ntdll: 97 generated syscall stubs, host-validated only
+M11 ░░░░░░░░░░░░░░░░░░░░   5%   ntdll: 98 generated syscall stubs, host-validated only
 M12 ░░░░░░░░░░░░░░░░░░░░   0%   Win32 layer, application corpus  → L3
 M13 ░░░░░░░░░░░░░░░░░░░░   0%   Track A research: real MS drivers/userland
 M14 ░░░░░░░░░░░░░░░░░░░░  10%   X GPT/FAT32 image auto-launches hello; no spotinit yet
@@ -299,10 +299,10 @@ M14 ░░░░░░░░░░░░░░░░░░░░  10%   X GPT/FA
 | **M3** | ACPI/MADT, LAPIC/IOAPIC, IRQL, timers, PCI | 🟡 75% | `lapic_bus_hz≈998MHz`, `ioapic_irq-ok`, `pci devices=6` |
 | **M4** | Mm: PFN page database, kernel pool, page tables, VAD, sections | 🟡 72% | `paging-on`, `vad-ok`, `demand-ok`, anonymous, file-backed and `SEC_IMAGE` NT sections (`test-section`, `test-section-file`, `test-section-image`), child PML4 construction, explicit-root 4 KiB mapping and page-table-tree teardown |
 | **M5** | Ob/Ps: objects, processes, threads, scheduler | 🟡 92% | `preempt-ok`, `sched-tid=0x1`, `cr3-b`/`cr3-a`, `thread-a-resumed`, `test-thread-create` ring-3 start, `test-thread-exit`, `test-blocking-wait` (block, signal/timeout resume, zero polls), `test-exit`, `test-apc`, `test-process-image` zero-thread `SEC_IMAGE` child DTB/refcount/rollback/cleanup, `test-public-process-thread` identity-based initial-thread round-trip, and `test-create-user-process` native bootstrap from System and ring-3 non-System parents |
-| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 99% | 97 NT handlers; public null-section and `SEC_IMAGE` process lifecycle; minimal `NtCreateUserProcess`; `test-svc3`; APC GPR restore; events, namespace, IOCP, blocking waits, registry, timestamps, ABI checks; `test-x-image` automatically launches `\X\hello.exe`; `test-pe-auto-boot` launches the opted-in PE diagnostic payload |
+| **M6** | Syscall entry + dispatch, ring 3, PE loader | 🟡 99% | 98 NT handlers; public null-section and `SEC_IMAGE` process lifecycle; `NtCreateUserProcess` with real PEB/TEB/process parameters and `NtResumeThread`; `test-svc3`; APC GPR restore; events, namespace, IOCP, blocking waits, registry, timestamps, ABI checks; `test-x-image` automatically launches `\X\hello.exe`; `test-pe-auto-boot` launches the opted-in PE diagnostic payload |
 | **M10** | Storage: VFS, FAT32/ext4/NTFS/btrfs, Cc | 🟡 37% | `test-disk`/`test-file`/`test-flush`: AHCI + FAT32 read/write with cluster growth, subdirectory path resolution, rename and delete-on-close, DOS creation/write timestamps exposed as FILETIMEs, VFS volume, 64 KiB image, whole-image flush re-read; NTFS parser |
 | M7–M9, M12 | Io, Cm, Se, Win32 | ⬜ | — |
-| M11 | ntdll syscall surface | 🟡 5% | 97 generated stubs + exports; table/CSV/kernel-constant/stub-byte host suites green; no loader/process caller |
+| M11 | ntdll syscall surface | 🟡 5% | 98 generated stubs + exports; table/CSV/kernel-constant/stub-byte host suites green; no loader/process caller |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
 | M14 | X bootstrap image | 🟡 10% | GPT/FAT32 image boots to HAL init and automatically launches `\X\hello.exe`; no `spotinit` |
 
@@ -313,17 +313,17 @@ M14 ░░░░░░░░░░░░░░░░░░░░  10%   X GPT/FA
 The public project is not the kernel alone. X now boots its full GPT image and automatically runs
 `hello.exe` in a separate process context; the kernel completes internal and public
 parent → child → parent process/thread round-trips, creates zero-thread `SEC_IMAGE` process
-DTBs with eager image mapping and cleanup, and provides minimal `NtCreateUserProcess` from
-System and ring-3 non-System parents.
+DTBs with eager image mapping and cleanup, and provides `NtCreateUserProcess` with real child
+PEB/TEB/process parameters plus `NtResumeThread` from System and ring-3 non-System parents.
 PE has a host-tested installer/recovery stack and bootable installation media with a freestanding
 `\SPOTPE\INIT.EXE` diagnostic payload. NT `test-pe-payload-launch` loads it with `INIT.CFG`,
-observes `PEP2`/`PEP4` and returns to the parent. Normal boot now honors an explicitly opted-in
+observes `PEP2` → `PEP5` → `PEP6` → `PEP4` and returns to the parent. Normal boot now honors an explicitly opted-in
 `\SPOTPE.CFG`; the real 64 MiB GPT server image reaches `pe-auto-ok`. A full PE console/installer
 session and ISO auto-launch remain absent.
 
 | | Spotlight X | Spotlight PE |
 |---|---|---|
-| **Today** | freestanding PE32+ `hello.exe` seed, 97 host-validated ntdll stubs, GPT/FAT32 bootstrap image, and automatic launch from the full X GPT image into a separate process context (`syscall=0x5a`, `XELL`, `x-image-ok`) | installer/recovery design, host console/init, state machine, journal, dry-run/file-backed apply, `no-gpt` rollback, GPT/FAT32 image, unsigned ISO 9660/El Torito media, unattended answer plans, and a freestanding `INIT.EXE` payload launched through exact `INIT.CFG` I/O and `PEP2`/`PEP4`; the opted-in 64 MiB GPT server image reaches `pe-auto-ok`, while ISO auto-launch and a full PE session remain absent |
+| **Today** | freestanding PE32+ `hello.exe` seed, 98 host-validated ntdll stubs, GPT/FAT32 bootstrap image, and automatic launch from the full X GPT image into a separate process context (`syscall=0x5a`, `XELL`, `x-image-ok`) | installer/recovery design, host console/init, state machine, journal, dry-run/file-backed apply, `no-gpt` rollback, GPT/FAT32 image, unsigned ISO 9660/El Torito media, unattended answer plans, and a freestanding `INIT.EXE` payload launched through exact `INIT.CFG` I/O and `PEP2` → `PEP5` → `PEP6` → `PEP4`; the opted-in 64 MiB GPT server image reaches `pe-auto-ok`, while ISO auto-launch and a full PE session remain absent |
 | **Blocked on** | ntdll loader/heap/RTL and Win32 | bootable PE userland on the kernel, then real disk adapter and interactive flow |
 | **Next** | ntdll loader/heap/RTL | boot `spotpe-init`, explorer/UI, physical disk adapter |
 | **Progress** | 12% | 13% |

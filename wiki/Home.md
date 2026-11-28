@@ -6,7 +6,7 @@
 
 ```
 Spotlight NT     ██████████████░░░░░░  85%   kernel: M0–M2 closed, M3 75%, M4 72%, M5 92%, M6 99%, M10 37%
-Spotlight X      █░░░░░░░░░░░░░░░░░░░  12%   full GPT image auto-launches hello; 97 ntdll stubs
+Spotlight X      █░░░░░░░░░░░░░░░░░░░  12%   full GPT image auto-launches hello; 98 ntdll stubs
 Spotlight PE     █░░░░░░░░░░░░░░░░░░░  13%   installer core, payload launch, rollback, console, ISO, answer plans
 Spotlight        ████████░░░░░░░░░░░░  55%   the project as a product (target: L3)
 ```
@@ -33,7 +33,7 @@ read/write, user APC delivery through a ring-3 trampoline, an in-memory registry
 timed delays and an NTFS parser.
 
 **Spotlight X:** 12% — a deterministic GPT/FAT32 image boots the kernel and automatically launches
-`\X\hello.exe` through the primary-GPT/sector-backed ESP path. A linked `ntdll.dll` exposes 97
+`\X\hello.exe` through the primary-GPT/sector-backed ESP path. A linked `ntdll.dll` exposes 98
 host-validated syscall trampolines. The PE completes `NtQuerySystemTime` and the `XELL` marker;
 ntdll loader/heap/RTL, Win32 and GUI remain absent.
 
@@ -42,19 +42,20 @@ tests + 12 ISO tests + 6 payload tests + 24 init tests), durable journal, dry-ru
 deterministic GPT/FAT32 image builder, file-backed apply, journal-driven `no-gpt` rollback, host
 console/init, unsigned ISO 9660/El Torito media, and deterministic unattended answer plans.
 Built-in images and ISOs carry the freestanding `\SPOTPE\INIT.EXE` payload; NT
-`test-pe-payload-launch` loads it with exact `INIT.CFG`, observes `PEP2`/`PEP4` and returns to the
+`test-pe-payload-launch` loads it with exact `INIT.CFG`, observes `PEP2` → `PEP5` → `PEP6` → `PEP4` and returns to the
 parent. Normal boot honors an opted-in `\SPOTPE.CFG`; the real 64 MiB GPT server image reaches
 `pe-auto-ok`. A full PE userland session, interactive installer and ISO auto-launch remain absent.
 
-**Recent kernel progress:** 97 NT syscalls, up from 74 (the earlier count missed the
+**Recent kernel progress:** 98 NT syscalls, up from 74 (the earlier count missed the
 token/thread SSNs 0x24, 0x2f, 0x41 and the new 0xc2). The internal executable-child
 bootstrap creates a child PML4 and initial thread and completes parent → child → parent
 with CR3/PID/PEB/TSS/GS publication, rollback and cleanup (`test-exec-process`);
 public `NtCreateProcess` keeps null-section object-only lifecycle and creates zero-thread
 `SEC_IMAGE` child DTBs (`test-process-image`). Identity-based public `NtCreateThreadEx` handles complete
 parent → child → parent with child-only stack/KUSER mappings (`test-public-process-thread`).
-Minimal `NtCreateUserProcess` opens an image path and returns process/thread/file/section handles;
-`test-create-user-process` covers System and ring-3 non-System parents. The Spotlight PE payload runs through `PEP2`/`PEP4` (`test-pe-payload-launch`), and normal boot honors an opted-in `\SPOTPE.CFG` (`test-pe-auto-boot`). Recent work includes file and path-based
+`NtCreateUserProcess` publishes real child PEB/TEB/process parameters and `NtResumeThread`
+starts the suspended initial thread; `test-create-user-process` covers System and ring-3
+non-System parents. The Spotlight PE payload runs through `PEP2` → `PEP5` → `PEP6` → `PEP4` (`test-pe-payload-launch`), and normal boot honors an opted-in `\SPOTPE.CFG` (`test-pe-auto-boot`). Recent work includes file and path-based
 attribute queries (including rename via `FileRenameInformation`,
 delete-on-close via `FileDispositionInformation`, `NtCreateFile` disposition
 modes with FAT32 cluster growth, and subdirectory path resolution for
@@ -166,7 +167,7 @@ I [serial] loopback self-test passed
 Self-tests: `test-boot` (38/38 lines), `test-lapic` (LAPIC timer), `test-timer` (10 ticks), `test-exception` (`EXC 3`),
 `test-bugcheck` (`BUGCHECK 0x50000001`), `test-exe`/`test-exe-file` (PE + IAT/TEB/PEB), `test-disk`/`test-file`/`test-flush` (AHCI + FAT32 + VFS + persistent flush, rename, delete-on-close, subdirectory paths, DOS creation/write timestamps),
 `test-section` (NT sections), `test-event` (named events), `test-namespace` (directory/symbolic-link objects), `test-iocp` (I/O completion),
-`test-sync` (scheduler-blocking waits), `test-blocking-wait` (zero polls, signal/timeout resume), `test-x-hello` (FAT32 `\X\hello.exe` → process → syscall round-trip), `test-x-image` (full GPT image → automatic launch), `test-process` (null-section process lifecycle), `test-process-image` (`SEC_IMAGE` child DTB, refcount, rollback and cleanup), `test-public-process-thread` (public handles → child → parent → cleanup), `test-create-user-process` (SSN 0xc9, System + ring-3 non-System parent), `test-pe-payload-launch` (`INIT.CFG` → `PEP2`/`PEP4` → parent → cleanup), `test-pe-auto-launch`/`test-pe-auto-boot` (opted-in normal boot → `PEP2`/`PEP4`), `test-exec-process` (child PML4 + initial thread → parent → child → parent → cleanup), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-thread-exit` (exit, dequeue, post-exit wait and query), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
+`test-sync` (scheduler-blocking waits), `test-blocking-wait` (zero polls, signal/timeout resume), `test-x-hello` (FAT32 `\X\hello.exe` → process → syscall round-trip), `test-x-image` (full GPT image → automatic launch), `test-process` (null-section process lifecycle), `test-process-image` (`SEC_IMAGE` child DTB, refcount, rollback and cleanup), `test-public-process-thread` (public handles → child → parent → cleanup), `test-create-user-process` (SSN 0xc9, System + ring-3 non-System parent), `test-pe-payload-launch` (`INIT.CFG` → `PEP2` → `PEP5` → `PEP6` → `PEP4` → parent → cleanup), `test-pe-auto-launch`/`test-pe-auto-boot` (opted-in normal boot → `PEP2` → `PEP5` → `PEP6` → `PEP4`), `test-exec-process` (child PML4 + initial thread → parent → child → parent → cleanup), `test-apc` (APC delivery and resume), `test-thread-create` (thread creation and ring-3 start), `test-thread-exit` (exit, dequeue, post-exit wait and query), `test-exit` (thread/process exit), `test-registry` (in-memory keys and values),
 `test-svc`/`test-svc3` (multi-argument SYSCALL); host unit and FAT32 tests. 39 QEMU test targets in total.
 
 ---
