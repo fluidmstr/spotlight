@@ -160,11 +160,12 @@ non-zero exit code if the marker is missing.
 * No desktop, no shell, no file manager.
 * No third-party Windows `.exe` support. That is L3 and it is far away — see
   [Compatibility](Compatibility.md).
-* No install to a physical disk. The installer environment (Spotlight PE) is 11%:
+* No install to a physical disk. The installer environment (Spotlight PE) is 13%:
   its host-tested installer core, deterministic GPT/FAT32 image builder and
   file-backed apply path exist. Built-in images and ISOs carry the freestanding
-  `\SPOTPE\INIT.EXE` diagnostic seed, but no boot stage launches it and there is
-  no PE userland session or working physical-disk installer yet.
+  `\SPOTPE\INIT.EXE` diagnostic payload; NT `test-pe-payload-launch` executes it with
+  `INIT.CFG` and observes `PEP2`/`PEP4`, but there is no auto-started PE userland session or
+  working physical-disk installer yet.
 
 If a guide on the internet promises otherwise, it is not about this project.
 

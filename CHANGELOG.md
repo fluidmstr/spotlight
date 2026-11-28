@@ -7,7 +7,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] - NT 83%, executable child round-trip and PE diagnostic seed (2026-11-28)
+## [Unreleased] - NT 85%, public process/thread round-trip and PE payload launch (2026-11-28)
 
 ### Added
 
@@ -74,15 +74,24 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 - **Executable child round-trip.** `test-exec-process` builds a child PML4 and initial thread,
   switches parent → child → parent with CR3/PID/PEB/TSS/GS publication, executes the X hello
   syscalls, and verifies rollback plus leaf-page/page-table/dynamic-slot cleanup. This is an
-  internal bootstrap; a public initial-thread path and `NtCreateUserProcess` remain future work.
-- **PE diagnostic seed.** PE builds a freestanding AMD64 PE32+ `INIT.EXE` that opens,
+  internal bootstrap; public process/thread handles now have their own round-trip, while
+  `NtCreateUserProcess` remains future work.
+- **PE diagnostic payload.** PE builds a freestanding AMD64 PE32+ `INIT.EXE` that opens,
   reads and closes `\SPOTPE\INIT.CFG` through NT file syscalls, emits `PEP2` for the exact
-  valid config and `PEP3` otherwise, and loops. Built-in images and ISOs carry both files,
-  but no boot stage launches the seed and there is no PE session.
-- **Readiness scales:** Spotlight NT **83%** (M4 **72%**, M5 **88%**, M6 **99%**),
-  the project overall **53%**, Spotlight X **12%**, Spotlight PE **11%**;
+  valid config, then `PEP4`, or `PEP3` otherwise. Built-in images and ISOs carry both files;
+  NT `test-pe-payload-launch` executes the payload and returns to the parent, but no full PE
+  session is auto-started.
+- **Public initial-thread round-trip.** System-only `NtCreateThreadEx` attaches a gated initial
+  thread to a public `SEC_IMAGE` child, validates the entry in the child DTB, maps a private
+  4–64 KiB stack and KUSER aliases, executes X hello syscalls and returns to the parent.
+  `test-public-process-thread` verifies wait/close plus stack/thread/DTB/section/PFN cleanup.
+- **PE payload launch.** `test-pe-payload-launch` builds `INIT.EXE` + exact `INIT.CFG`, creates
+  the child through public handles, requires `PEP2` → `PEP4`, restores the parent and verifies
+  full cleanup. This is a diagnostic payload, not a PE shell or installer session.
+- **Readiness scales:** Spotlight NT **85%** (M4 **72%**, M5 **92%**, M6 **99%**),
+  the project overall **55%**, Spotlight X **12%**, Spotlight PE **13%**;
   M0–M2 100%, M3 75%, M10 37%, M11 5%, M14 10%, all others 0%.
-- **Tests:** 34 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-process-image` and `test-exec-process`).
+- **Tests:** 36 QEMU targets (adds `test-thread-exit`, `test-blocking-wait`, `test-x-hello`, `test-x-image`, `test-process`, `test-process-image`, `test-public-process-thread`, `test-pe-payload-launch` and `test-exec-process`).
 
 ### Verified
 
@@ -98,10 +107,12 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 | PE `test-answer` | 14 parser/plan/digest tests; license-false zero-write proof |
 | `tests/abi` | 7 suites: SSN/status/layout/list/RTL/OBJECT_HEADER/PS checks |
 | X `test-ntdll` | 96 exports/stubs; 3530 table/CSV/kernel-constant/byte assertions |
-| `test-process` | kind-13 create/query/wait/terminate/close, pool/PID and CR3/TSS checks |
 | `test-process-image` | real `SEC_IMAGE` child DTB, parent/child PTE isolation, section refcount, pool rollback and cleanup |
+| `test-public-process-thread` | public section/process/thread handles → child KUSER + X hello syscalls → parent restore → wait/close → PFN/MM cleanup |
+| `test-pe-payload-launch` | Spotlight PE `INIT.EXE`/`INIT.CFG` → exact file I/O → `PEP2`/`PEP4` → parent restore → cleanup |
+| `test-process` | kind-13 null-section create/query/wait/terminate/close, pool/PID and CR3/TSS checks |
 | `test-exec-process` | child PML4 + initial thread → parent → child → parent; rollback/restore/cleanup counters |
-| PE `test-payload` | AMD64 PE32+ seed, no imports/runtime/heap, exact INIT.CFG file-syscall and PEP2/PEP3 bytes; carried, not launched |
+| PE `test-payload` | AMD64 PE32+ payload, no imports/runtime/heap, exact INIT.CFG file-syscall and PEP2/PEP3/PEP4 bytes; launched by NT `test-pe-payload-launch` |
 | `test` (host) | ABI/SSN suite green, 96 SSN rows |
 
 ---
@@ -151,7 +162,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ### Changed
 
-- **Readiness scales:** Spotlight NT **68% → 69%** (M5 **53% → 55%**,
+- **Readiness scales:** Spotlight NT **68% → 69%** (M5 **55% → 55%**,
   M6 **93% → 94%**), the project overall **40% → 41%**. Spotlight X stays
   **5%**, Spotlight PE stays **8%**; M0–M2 100%, M3 75%, M4 65%, M10 35%, all
   others 0%.
@@ -172,7 +183,7 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 - **Readiness scales:** Spotlight NT **68% → 69%**, Spotlight PE **6% → 8%**, the
   project overall **39% → 41%**, Spotlight X is **7%**. Milestones: M0–M2 100%,
-  M3 75%, M4 65%, M5 **53% → 55%**, M6 **93% → 94%**, M10 35%, all others 0%.
+  M3 75%, M4 65%, M5 **55% → 55%**, M6 **93% → 94%**, M10 35%, all others 0%.
 - **APC delivery:** `NtQueueApcThread` queues user APCs; `NtTestAlert` or an alertable wait delivers
   them through a ring-3 trampoline (`test-apc`), restoring RAX/RBP and resuming the interrupted RIP.
 - **Boot chain:** `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, `SPOTLDR` loads
