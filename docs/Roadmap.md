@@ -22,9 +22,9 @@ M10 ███████░░░░░░░░░░░░░  37%
 M11 ░░░░░░░░░░░░░░░░░░░░   5%
 M12 ░░░░░░░░░░░░░░░░░░░░   0%
 M13 ░░░░░░░░░░░░░░░░░░░░   0%
-M14 ░░░░░░░░░░░░░░░░░░░░  10%
+M14 ░░░░░░░░░░░░░░░░░░░░  15%
 
-Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 85% · X 12% · project 55% · PE 13%
+Overall  ████████████████████████████████░░░░░░░░░░░░  kernel 85% - X 15% - project 57% - PE 16%
 ```
 
 The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
@@ -49,7 +49,7 @@ the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `tru
 | **M11** | ntdll, ALPC, console | 🟡 5% — 98 host-validated syscall stubs; no loader/process |
 | **M12** | Win32 layer, `.exe` corpus → **L3** | ⬜ |
 | **M13** | Track A: real MS drivers and userland | 🔬 |
-| **M14** | Spotlight X 1.0: image, installer | 🟡 10% — full GPT/FAT32 image auto-launches hello; no `spotinit` |
+| **M14** | Spotlight X 1.0: image, installer | 🟡 15% — GPT image boots hello; spotinit+sptdm graphical supervisor proof; no full service runtime |
 
 ### M2, in detail — closed
 

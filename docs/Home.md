@@ -6,9 +6,9 @@
 
 ```
 Spotlight NT     ██████████████░░░░░░  85%   kernel: M0–M2 closed, M3 75%, M4 72%, M5 92%, M6 99%, M10 37%
-Spotlight X      █░░░░░░░░░░░░░░░░░░░  12%   full GPT image auto-launches hello; 98 ntdll stubs
-Spotlight PE     █░░░░░░░░░░░░░░░░░░░  13%   installer core, payload launch, rollback, console, ISO, answer plans
-Spotlight        ████████░░░░░░░░░░░░  55%   the project as a product (target: L3)
+Spotlight X      █░░░░░░░░░░░░░░░░░░░  15%   GPT image boots hello; sptdm graphical supervisor proof
+Spotlight PE     █░░░░░░░░░░░░░░░░░░░  16%   installer core, GPT boot, spotinit/sptdm supervisor, SVC1 probe groundwork
+Spotlight        ████████░░░░░░░░░░░░  57%   the project as a product (target: L3)
 ```
 
 **Current state (build 26.1.5061.0.1-dev):** M0–M2 are closed; M3 is at 75%, M4 at 72%, M5 at 92%, M6 at
@@ -32,12 +32,12 @@ and symbolic-link objects, I/O completion ports, direct virtual-memory
 read/write, user APC delivery through a ring-3 trampoline, an in-memory registry,
 timed delays and an NTFS parser.
 
-**Spotlight X:** 12% — a deterministic GPT/FAT32 image boots the kernel and automatically launches
+**Spotlight X:** 15% — a deterministic GPT/FAT32 image boots hello; 5061 adds QEMU-proven spotinit+sptdm graphical supervisor (SPDR 2, pe-auto-ok). It still launches
 `\X\hello.exe` through the primary-GPT/sector-backed ESP path. A linked `ntdll.dll` exposes 98
 host-validated syscall trampolines. The PE completes `NtQuerySystemTime` and the `XELL` marker;
 ntdll loader/heap/RTL, Win32 and GUI remain absent.
 
-**Spotlight PE:** 13% — host-tested installer core (83 installer tests + 14 answer tests + 15 image
+**Spotlight PE:** 16% — host-tested installer core (83 installer tests + 14 answer tests + 15 image
 tests + 12 ISO tests + 9 payload tests + 24 init tests), durable journal, dry-run executor,
 deterministic GPT/FAT32 image builder, file-backed apply, journal-driven `no-gpt` rollback, host
 console/init, unsigned ISO 9660/El Torito media, and deterministic unattended answer plans.

@@ -10,9 +10,9 @@
 <br>
 
 ![Spotlight NT](https://img.shields.io/badge/Spotlight%20NT-85%25%20·%20M4-2ea043?style=flat-square)
-![Spotlight X](https://img.shields.io/badge/Spotlight%20X-12%25-lightgrey?style=flat-square)
-![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-13%25-lightgrey?style=flat-square)
-![Spotlight](https://img.shields.io/badge/Spotlight%20project-55%25-orange?style=flat-square)
+![Spotlight X](https://img.shields.io/badge/Spotlight%20X-15%25-lightgrey?style=flat-square)
+![Spotlight PE](https://img.shields.io/badge/Spotlight%20PE-16%25-lightgrey?style=flat-square)
+![Spotlight](https://img.shields.io/badge/Spotlight%20project-57%25-orange?style=flat-square)
 ![ABI](https://img.shields.io/badge/ABI-Windows%2010%20x64%2019045-0078d4?style=flat-square)
 ![Language](https://img.shields.io/badge/language-V-4f7396?style=flat-square)
 ![License](https://img.shields.io/badge/license-GPL--2.0--or--later-blue?style=flat-square)
@@ -20,9 +20,9 @@
 
 ```
 Spotlight NT     ██████████████░░░░░░  85%   kernel: M0–M2 closed, M3 75%, M4 72%, M5 92%, M6 99%, M10 37%
-Spotlight X       █░░░░░░░░░░░░░░░░░░░   12%   full GPT image auto-launches hello; 98 ntdll stubs
-Spotlight PE     █░░░░░░░░░░░░░░░░░░░   13%   installer core, payload launch, rollback, console, ISO, answer plans
-Spotlight        ████████░░░░░░░░░░░░  55%   the project as a product (target: L3)
+Spotlight X       █░░░░░░░░░░░░░░░░░░░   15%   GPT image boots hello; sptdm graphical supervisor proof (SPDR 2, pe-auto-ok)
+Spotlight PE     █░░░░░░░░░░░░░░░░░░░   16%   installer core, GPT boot, spotinit/sptdm supervisor, SVC1 probe groundwork
+Spotlight        ████████░░░░░░░░░░░░  57%   the project as a product (target: L3)
 ```
 
 </div>
@@ -54,9 +54,9 @@ Four independent scales, so nobody confuses a working kernel with a working OS.
 | Scale | What it measures | Progress | Works today | Next |
 |---|---|---|---|---|
 | **Spotlight NT** | kernel, loader, HAL, drivers, ABI | **85%** (M0–M2 ✅, M3 75%, M4 72%, M5 92%, M6 99%, M10 37%) | boots on UEFI, COM1 klog, descriptors, interrupts, ACPI/APIC, PCI, PFN/paging/VAD, anonymous, file-backed and `SEC_IMAGE` NT sections with demand paging, 98 NT syscalls, ring-3 SYSCALL with stack arguments, preemptive scheduler, user thread creation (`NtCreateThreadEx`), thread exit/dequeue, non-consumptive post-exit wait and `ThreadBasicInformation` through a kind-12 handle, user APC delivery through a ring-3 trampoline, PE32+ loader with IAT/TEB/PEB/process CR3, internal executable-child PML4/initial-thread parent → child → parent bootstrap with rollback/cleanup (`test-exec-process`), public zero-thread `SEC_IMAGE` process DTBs (`test-process-image`), public process/initial-thread parent → child → parent execution with stack/KUSER/DTB cleanup (`test-public-process-thread`), `NtCreateUserProcess` with real child PEB/TEB/process parameters and `NtResumeThread`, including ring-3 non-System parent coverage (`test-create-user-process`), Spotlight PE payload `INIT.CFG` → `PEP2` → `PEP5` → `PEP6` → `PEP4` launch (`test-pe-payload-launch`), normal opted-in PE diagnostic auto-launch (`test-pe-auto-boot`), polling AHCI (READ/WRITE DMA) + FAT32 read/write behind a VFS volume with synchronous whole-image flush, rename and delete-on-close, file disposition modes, FAT32 subdirectory paths and DOS creation/write timestamps surfaced as FILETIMEs (`FileBasicInformation`, `FileAllInformation`, `FileNetworkOpenInformation`), event/mutant/semaphore/timer objects with named opens, single- and multi-object scheduler-blocking waits (`test-blocking-wait`), object namespace (`\KnownDlls`, `\BaseNamedObjects`, directory and symbolic-link objects), I/O completion ports, direct virtual-memory read/write, in-memory registry, token queries and timed delays, NTFS parser | M4: working sets/COW; M5: priorities/idle/thread join (stack reclamation); M6: APC FPU/exception context and broader dispatch; M8: hives; M10: ext4, partial/async flush, write-back cache, nested-path creation |
-| **Spotlight X** | userland, Win32 layer, GUI, distro | **12%** (first X PE execution + ntdll syscall surface) | freestanding PE32+ `hello.exe` seed (13 host tests, 2 KB), deterministic 64 MiB GPT/FAT32 image, a linked 98-stub `ntdll.dll` (table/CSV/kernel-constant/stub-byte host suites), and automatic launch from the full X image through primary-GPT + sector-backed FAT32 ESP reads (`test-x-image`) | ntdll loader/heap/RTL, then Win32 |
-| **Spotlight PE** | installer / recovery environment | **13%** (host-tested installer core + payload launch) | state machine, durable journal, dry-run/file-backed apply, `no-gpt` rollback, host console/init, deterministic GPT/FAT32 image, unsigned ISO 9660/El Torito media, deterministic unattended answer plans, and a freestanding `INIT.EXE` diagnostic payload launched through exact `INIT.CFG` I/O and `PEP2` → `PEP5` → `PEP6` → `PEP4`; the opted-in 64 MiB GPT server image reaches `pe-auto-ok` (83 installer + 14 answer tests) | bootable `spotpe-init`, real disk adapter, interactive installer |
-| **Spotlight** | the project as a product | **55%** | honest start: a reproducible kernel bring-up with tests | L2: ntdll + kernel32 + CRT and our own programs |
+| **Spotlight X** | userland, Win32 layer, GUI, distro | **15%** (sptdm graphical supervisor + ntdll syscall surface) | freestanding PE32+ `hello.exe`, 98-stub `ntdll.dll`, GPT/FAT32 boot, and QEMU-proven spotinit+sptdm graphical supervisor (GOP fb, SPDM/SPDR/SPDO, config-driven restart, pe-auto-ok) | ntdll loader/heap/RTL, compositor IPC, Win32 |
+| **Spotlight PE** | installer / recovery environment | **16%** (installer core + graphical boot supervisor + SVC1 probe groundwork) | host-tested installer/recovery stack, GPT/ISO media, freestanding INIT.EXE payload, QEMU-proven spotinit+sptdm supervisor with config-driven restart/policy, and SVC1.EXE probe payload (real svc1 launch blocked by active VFS FAT32 write issue) | real svc1 process launch, bootable PE session, real disk adapter, interactive installer |
+| **Spotlight** | the project as a product | **57%** | reproducible kernel bring-up, graphical sptdm supervisor proof, installer groundwork | L2: ntdll + kernel32 + CRT and our own programs |
 
 > The kernel is ahead of the OS. That is expected: userland and the installer need
 > a broad, stable syscall surface, not a handful of handlers.
@@ -294,7 +294,7 @@ M10 ███████░░░░░░░░░░░░░  37%   Storage:
 M11 ░░░░░░░░░░░░░░░░░░░░   5%   ntdll: 98 generated syscall stubs, host-validated only
 M12 ░░░░░░░░░░░░░░░░░░░░   0%   Win32 layer, application corpus  → L3
 M13 ░░░░░░░░░░░░░░░░░░░░   0%   Track A research: real MS drivers/userland
-M14 ░░░░░░░░░░░░░░░░░░░░  10%   X GPT/FAT32 image auto-launches hello; no spotinit yet
+M14 ░░░░░░░░░░░░░░░░░░░░  15%   X GPT image boots hello; spotinit+sptdm graphical supervisor proof; no full service runtime
 ```
 
 | Stage | Scope | State | Evidence |
@@ -310,7 +310,7 @@ M14 ░░░░░░░░░░░░░░░░░░░░  10%   X GPT/FA
 | M7–M9, M12 | Io, Cm, Se, Win32 | ⬜ | — |
 | M11 | ntdll syscall surface | 🟡 5% | 98 generated stubs + exports; table/CSV/kernel-constant/stub-byte host suites green; no loader/process caller |
 | M13 | Track A: Microsoft drivers and userland | 🔬 research | gated by G2 |
-| M14 | X bootstrap image | 🟡 10% | GPT/FAT32 image boots to HAL init and automatically launches `\X\hello.exe`; no `spotinit` |
+| M14 | X bootstrap image | 🟡 15% | GPT/FAT32 image boots hello; spotinit+sptdm graphical supervisor proof; real svc1 process launch WIP |
 
 ---
 
@@ -332,7 +332,7 @@ session and ISO auto-launch remain absent.
 | **Today** | freestanding PE32+ `hello.exe` seed, 98 host-validated ntdll stubs, GPT/FAT32 bootstrap image, and automatic launch from the full X GPT image into a separate process context (`syscall=0x5a`, `XELL`, `x-image-ok`) | installer/recovery design, host console/init, state machine, journal, dry-run/file-backed apply, `no-gpt` rollback, GPT/FAT32 image, unsigned ISO 9660/El Torito media, unattended answer plans, and a freestanding `INIT.EXE` payload launched through exact `INIT.CFG` I/O and `PEP2` → `PEP5` → `PEP6` → `PEP4`; the opted-in 64 MiB GPT server image reaches `pe-auto-ok`, while ISO auto-launch and a full PE session remain absent |
 | **Blocked on** | ntdll loader/heap/RTL and Win32 | bootable PE userland on the kernel, then real disk adapter and interactive flow |
 | **Next** | ntdll loader/heap/RTL | boot `spotpe-init`, explorer/UI, physical disk adapter |
-| **Progress** | 12% | 13% |
+| **Progress** | 15% | 16% |
 
 ### Not a Windows clone
 
@@ -354,7 +354,7 @@ choices:
 * Details: ADR-0010 (namespace/filesystems), ADR-0011 (graphics), ADR-0012
   (session fallback) in `spotlight-nt/docs/adr/`.
 
-That is why the overall project sits at 55% while the kernel is at 85%: the OS
+That is why the overall project sits at 57% while the kernel is at 85%: the OS
 needs the kernel to finish first, not the other way around.
 
 ---
