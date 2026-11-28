@@ -139,7 +139,13 @@ And the machine itself proves the rest:
 | Bugcheck path | `v run mk/build.vsh -- test-bugcheck` | `BUGCHECK 0x50000001` |
 | Host unit tests | `v run mk/build.vsh -- test` | PE, memory, SSDT/symgen, scheduler, RTC, image and FAT32/NTFS suites green |
 
-### Recent kernel progress (2026-11-28)
+### Recent kernel progress (2026-11-29, build 26.1.5061.0.1-dev)
+
+* **sptdm / graphical boot**: GPT server+spotinit boots under QEMU/OVMF with GOP framebuffer published in KUSER_SHARED_DATA (`0x7FFE07C0..0x7FFE07E8`), `sptdm` draws desktop/mouse markers (`SPDM/SPDS/SPDD/SPDR/SPDO/SPDW`), and spotinit supervises it with clean restart/exit markers (`SPTC,SPTS,SPSV,SPTL,SPTP,SPTR,SPRS,SPRE,pe-auto-ok`).
+* **Config-driven supervision**: `SPOTPE.CFG` `restart=N` and multi-service policy keys (`svc.count`, `svc1.enabled`, `svc1.restart`) are parsed by kernel `pe_auto`, published to KUSER `0x7FFE07F0..0x7FFE07FC`, and consumed by spotinit/kernel supervision. QEMU proofs: restart=1 SPDR 2; restart=2 SPDR 3; multi-service policy marker execution (svc1-start/exit/restart/end) in kernel-safe path.
+* **svc1 real-process probe (WIP, reverted)**: freestanding `SVC1.EXE` probe payload added to PE image. Real kernel launch/wait/restart attempt blocked by active VFS FAT32 `fat32_set_size_at` failure on publish (`svc1-pub-write=0`, file size 0, `NtCreateUserProcess` 0xc000000d). Path reverted to marker-only for boot safety.
+
+### Previous kernel progress (2026-11-28)
 
 * **Boot chain**: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which loads
   `ntoskrnl.exe`; the kernel reaches HAL initialization under QEMU/OVMF. The

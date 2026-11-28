@@ -11,11 +11,11 @@ Spotlight PE     █░░░░░░░░░░░░░░░░░░░  1
 Spotlight        ████████░░░░░░░░░░░░  55%   the project as a product (target: L3)
 ```
 
-**Current state:** M0–M2 are closed; M3 is at 75%, M4 at 72%, M5 at 92%, M6 at
+**Current state (build 26.1.5061.0.1-dev):** M0–M2 are closed; M3 is at 75%, M4 at 72%, M5 at 92%, M6 at
 99% and M10 at 37%. Our own UEFI boot manager chain-loads our loader, which boots
 a PE32+ kernel written in V, exits boot services, builds identity page tables and
 enters `KiSystemStartup`; the QEMU smoke run reports `SPOTBOOT true`,
-`SPOTLDR true` and the kernel marker `true`. The kernel brings up COM1, GDT/TSS/IDT,
+`SPOTLDR true` and the kernel marker `true`. 5061 adds QEMU-proven sptdm graphical boot supervision (SPDR 2, pe-auto-ok), config-driven SPOTPE.CFG/KUSER multi-service policy markers, and svcprobe SVC1.EXE groundwork (real process launch blocked by active VFS FAT32 write issue, reverted to marker-only). The kernel brings up COM1, GDT/TSS/IDT,
 exception handling, KPCR, hardware interrupts, a bugcheck path, ACPI/MADT,
 LAPIC/IOAPIC, IRQL, spinlocks, a
 calibrated LAPIC timer replacing the 8259/PIT, one IOAPIC line routed end-to-end

@@ -31,6 +31,8 @@ The boot chain works end to end: `SPOTBOOT.EFI` chain-loads `SPOTLDR.EFI`, which
 loads `ntoskrnl.exe`; the kernel reaches HAL initialization under QEMU/OVMF, and
 the smoke run reports `SPOTBOOT true`, `SPOTLDR true` and the kernel marker `true`.
 
+**5061 update:** QEMU-proven sptdm graphical boot supervision (GOP fb, SPDM/SPDR/SPDO, restart policy, SPDR 2, pe-auto-ok), config-driven multi-service policy via SPOTPE.CFG/KUSER, and svcprobe SVC1.EXE groundwork. Real svc1 process launch blocked by active VFS FAT32 write/set_size issue; marker-only supervision retained.
+
 | Stage | Scope | State |
 |---|---|---|
 | **M0** | UEFI app in V, no libc, no runtime | ✅ |

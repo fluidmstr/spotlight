@@ -7,7 +7,20 @@ build number, the `0.1` tail is fixed, and `-dev` marks a prerelease (for exampl
 
 ---
 
-## [Unreleased] - NT 85%, NtResumeThread, process-context publication and PE auto-launch (2026-11-28)
+## [Unreleased] - 5061 sptdm supervision, multi-service policy, svcprobe groundwork (2026-11-29)
+
+### Added
+
+- **sptdm graphical boot proof (QEMU/OVMF 1280x800)**: spotinit supervisor launches sptdm with GOP framebuffer published through KUSER_SHARED_DATA (`0x7FFE07C0..0x7FFE07E8`), emits SPDM/SPDS/SPDD/SPDR/SPDO markers, and clean restart-once supervision (`SPTC,SPTS,SPSV,SPTL,SPTP,SPTR,SPRS,SPRE,pe-auto-ok`, SPDR 2).
+- **Config-driven supervision**: `SPOTPE.CFG` `restart=N` and multi-service keys `svc.count`, `svc1.enabled`, `svc1.restart` parsed by kernel `pe_auto` and published to KUSER `0x7FFE07F0..0x7FFE07FC`. QEMU proofs: restart=2 gives SPDR 3; multi-service config publishes `kshared-svc-count=2,kshared-svc1-en=1`; kernel-side svc1 start/exit/restart/end marker execution proven.
+- **svcprobe payload groundwork**: freestanding `\SPOTPE\SVC1.EXE` probe added to PE image/build wiring (`spotlight-pe/src/svcprobe`, `mk/svcprobe.vsh`).
+
+### Known issues
+
+- Real svc1 process launch/wait/restart in kernel `pe_auto` is blocked by active VFS FAT32 `fat32_set_size_at` failure when publishing SVC1.EXE (write 0, file size 0, `NtCreateUserProcess` 0xc000000d). Path reverted to marker-only supervision.
+- spotinit freestanding V codegen/stack corruption still causes `STATUS_INVALID_PARAMETER` for extra init-path syscalls/buffer access before `NtCreateUserProcess`; kernel/KUSER transport remains the safe config path.
+
+## [Previous] - NT 85%, NtResumeThread, process-context publication and PE auto-launch (2026-11-28)
 
 ### Added
 
